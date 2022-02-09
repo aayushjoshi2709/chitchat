@@ -11,8 +11,15 @@ const userSchema = mongoose.Schema({
     password: String,
     userName: String
 });
-
 var User = mongoose.model("User",userSchema);
+// creating message model with mongoose
+const messageSchema = mongoose.Schema({
+    form: String,
+    to: String,
+    time: String,
+    message: String
+});
+var message = mongoose.model("Message",messageSchema);
 
 App.set("view engine","ejs");
 
@@ -37,6 +44,7 @@ App.post("/user",function(req,res){
         else console.log(user);
     });
 })
+
 
 // app server
 App.listen(process.env.PORT,process.env.IP,function(){
