@@ -3,7 +3,7 @@ const App = express();
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 // creating user model with mongoose
-mongoose.connect("mongodb+srv://aayush:M1wYnF3LD9wbxVNl@cluster0.lujj9.mongodb.net/chitchat?retryWrites=true&w=majority");
+mongoose.connect(process.env.databaseURL);
 const userSchema = mongoose.Schema({
     firstName: String,
     lastName: String,
