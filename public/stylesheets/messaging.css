@@ -1,0 +1,59 @@
+html{
+    height: 100%;
+}
+body{
+    background-color: #121b20;
+    height: 100%;
+    padding: 2rem;
+}
+@media only screen and (max-width: 800px) {
+    body {
+      padding: 0px;
+    }
+}
+.header{
+    background-color: #3949AB;
+}
+#main-container{
+    background-color: #BBF68c;
+    min-height: 90vh;
+}
+#contacts{
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 72.70vh;
+}
+#messages{
+    margin: 0;
+    padding: 0;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 74vh;
+}
+col{
+    padding: 0;
+}
+.card{
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+}
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+  }
+   
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: #888; 
+  }
+  
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555; 
+  }
