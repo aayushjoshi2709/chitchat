@@ -1,5 +1,3 @@
-const { append } = require('express/lib/response');
-
 const ioClient               = require('socket.io-client'),
       express                = require('express'),
       App                    = express(),
@@ -51,10 +49,11 @@ var Message = mongoose.model("Message",messageSchema);
 App.get("/",function(req,res){
     res.render('index')
 })
+
 // new user route
 App.get("/register",function(req,res){
     res.render("./user/new");
-})
+});
 // create user route
 App.post("/register",function(req,res){
     //adding the user to database
@@ -66,10 +65,8 @@ App.post("/register",function(req,res){
     }
     User.register(new User(user),req.body.password,function(error,user){
         if(error){ 
-            console.log(error);
             return res.redirect("back");
         }else {
-            console.log(user);
             passport.authenticate('local')(req,res,function(){
                 res.redirect("/messaging");
             });
@@ -85,7 +82,7 @@ App.post("/login",passport.authenticate("local",{
     successRedirect:"/messaging"
 }),function(req,res){})
 // messaging route
-App.get("/messaging",function(req,res){
+App.get("/messaging",isLoggedIn,function(req,res){
     res.render("./messaging/index");
 });
 
@@ -94,7 +91,14 @@ App.get("/logout",function(req,res){
     req.logout();
     res.redirect("/");
 });
-
+// check if the user is logged in or not
+function isLoggedIn(req,res,next){
+    if(req.isAuthenticated()){
+        return next();
+    }else{
+        res.redirect('/login');
+    }
+}
 // app server
 App.listen(process.env.PORT,process.env.IP,function(){
     console.log("server started");
