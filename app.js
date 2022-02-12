@@ -1,5 +1,3 @@
-const req = require('express/lib/request');
-
 const ioClient               = require('socket.io-client'),
       express                = require('express'),
       app                    = express(),
@@ -93,17 +91,81 @@ app.post("/user/:id/message",function(req,res){
                     toUser.save();
                     fromUser.messages.push(message._id);
                     fromUser.save();
+                    res.send("{status:success}");
                 })
             }
         })
     })
 });
+
+
+// group messages by sender id and remove extra info
+function groupByKey(array,given_id) {  
+    var res = {} 
+    array.forEach(ele=>{
+        var msg ={
+            message : ele.message,
+            time: ele.time,
+            from: ele.from._id,
+            to: ele.to._id,
+        }
+        if(ele.to ==given_id){
+            var id =ele.from._id;
+            if(res[id]){
+                res[id].messages.push(msg);
+            }else{
+                res[id] = {"messages":[msg]};
+                res[id].name = ele.form.firstName + " " + ele.form.lastName;
+                res[id].username = ele.from.username;
+            }
+            res[id].lasttime = msg.time;
+        }else if(ele.from._id ==given_id){
+            var id =ele.to._id;
+            if(res[id])
+                res[id].messages.push(msg);
+            else{
+                res[id] = {"messages":[msg]};
+                res[id].name = ele.to.firstName + " " + ele.to.lastName;
+                res[id].username = ele.to.username;
+            }
+            res[id].lasttime = msg.time;
+        }
+    });
+    return res;
+}
+// sort grouped messages by last recieved custom comparator
+function comparator(a,b){
+    if(a[1].lasttime > b[1].lasttime)
+        return -1;
+    else if (a[1].lasttime < b[1].lasttime)
+        return 1;
+    else
+        return 0;
+}
+// sort messages by last time
+function sortMessages(result){
+    var arr =[];
+    var res = {};
+    for (var key in result) {
+        arr.push([key, result[key]]);
+    }
+    arr.sort(comparator);
+    arr.forEach(element=>{
+        res[element[0]] = element[1];
+    });
+    return res;
+}
 // get all messages route
 app.get("/user/:id/message",function(req,res){
-    User.findById(req.params.id).populate('messages').exec(function(error,user){
+    User.findById(req.params.id).populate({path:'messages',
+       populate:{path:'from to'}
+    }).exec(function(error,user){
         if(error) console.log(error);
         else{
-            res.send(JSON.stringify(user.messages));
+            // group all elements by person
+            var result = groupByKey(user.messages,req.params.id);
+            // sort all element by last time recieved
+            res.send(JSON.stringify(sortMessages(result)));
         }
     });
 });
