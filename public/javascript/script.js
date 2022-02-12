@@ -1,4 +1,4 @@
-var socket = io.connect('http://'+IP+':3000');
+var socket = io.connect('https://'+IP+':3000');
 var g_data;
 var current_id;
 function getTime(str){
