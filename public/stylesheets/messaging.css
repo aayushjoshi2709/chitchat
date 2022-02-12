@@ -38,6 +38,16 @@ col{
     margin: 0;
     border-radius: 0;
 }
+#contacts{
+    background-color: #ffffff;
+}
+.color-green{
+    background-color: #81C784;
+}
+.msg{
+    width: auto;
+    max-width: 45%;
+}
 /* width */
 ::-webkit-scrollbar {
     width: 10px;

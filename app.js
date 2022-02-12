@@ -1,5 +1,6 @@
-const ioClient               = require('socket.io-client'),
-      express                = require('express'),
+const { env } = require('process');
+
+const express                = require('express'),
       app                    = express(),
       mongoose               = require('mongoose'),
       bodyParser             = require('body-parser'),
@@ -8,14 +9,29 @@ const ioClient               = require('socket.io-client'),
       { createServer }       = require("http"),
       localStrategy          = require('passport-local'),
       passportLocalMongoose  = require('passport-local-mongoose');
-
 app.set("view engine","ejs");
 // set app to user body parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 // adding public dir to the app
 app.use(express.static(__dirname + "/public"));
+
+// configuring socket.io
+const httpServer = createServer(app);
+const io = new Server(httpServer,{ 
+    cors: {
+        origin: "http://"+process.env.IP+":"+process.env.PORT,
+        methods: ["GET", "POST"],
+        transports: ['websocket', 'polling'],
+        credentials: true
+    },
+    allowEIO3: true
+ });
+
+io.on("connection", (socket) => {
+  console.log(socket.id);
+});
+httpServer.listen(3000);
 
 // creating user model with mongoose
 mongoose.connect(process.env.databaseURL);
@@ -50,7 +66,7 @@ const messageSchema = mongoose.Schema({
         ref: 'User'
     },
     status: String,
-    time: String,
+    time: {type: Date, default: Date.now},
     message: String
 });
 var Message = mongoose.model("Message",messageSchema);
@@ -109,13 +125,13 @@ function groupByKey(array,given_id) {
             from: ele.from._id,
             to: ele.to._id,
         }
-        if(ele.to ==given_id){
+        if(ele.to._id == given_id){
             var id =ele.from._id;
             if(res[id]){
                 res[id].messages.push(msg);
             }else{
                 res[id] = {"messages":[msg]};
-                res[id].name = ele.form.firstName + " " + ele.form.lastName;
+                res[id].name = ele.from.firstName + " " + ele.from.lastName;
                 res[id].username = ele.from.username;
             }
             res[id].lasttime = msg.time;
@@ -135,6 +151,7 @@ function groupByKey(array,given_id) {
 }
 // sort grouped messages by last recieved custom comparator
 function comparator(a,b){
+    
     if(a[1].lasttime > b[1].lasttime)
         return -1;
     else if (a[1].lasttime < b[1].lasttime)
@@ -238,8 +255,11 @@ app.post("/login",passport.authenticate("local",{
 
 // messaging route
 app.get("/messaging",isLoggedIn,function(req,res){
-    res.render("./messaging/index");
-    console.log(req.user._id);
+    res.render("./messaging/index",{
+        id:req.user._id,
+        ip:process.env.IP,
+        port:process.env.PORT
+    });
 });
 
 // logout route
