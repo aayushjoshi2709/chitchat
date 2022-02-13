@@ -1,10 +1,9 @@
+const { env } = require('process');
 const express                = require('express'),
       app                    = express(),
       mongoose               = require('mongoose'),
       bodyParser             = require('body-parser'),
-      { Server }             = require('socket.io'),
       passport               = require('passport'),
-      { createServer }       = require("http"),
       localStrategy          = require('passport-local'),
       passportLocalMongoose  = require('passport-local-mongoose');
 app.set("view engine","ejs");
@@ -51,18 +50,23 @@ const messageSchema = mongoose.Schema({
 });
 var Message = mongoose.model("Message",messageSchema);
 
+
 // configuring socket.io
-const httpServer = createServer(app);
-const io = new Server(httpServer,{ 
-    cors: {
+const http = require('http').Server(app);
+const io = require('socket.io')(http,
+    {cors: {
         origin: "http://"+process.env.IP+":"+process.env.PORT,
         methods: ["GET", "POST"],
         transports: ['websocket', 'polling'],
         credentials: true
-    },
-    allowEIO3: true
- });
+    },allowEIO3: true
+}
+);
 
+http.listen(process.env.PORT,function(){
+    console.log("App started");
+}
+)
 // store socket id for a user on connection
 io.on("connection", (socket) => {
     socket.on('user', function(data) {
@@ -111,7 +115,6 @@ io.on("connection", (socket) => {
         })
     });
 });
-httpServer.listen(3000);
 // passport configuration
 userSchema.plugin(passportLocalMongoose);
 var User = mongoose.model("User",userSchema);
@@ -296,7 +299,8 @@ app.post("/login",passport.authenticate("local",{
 app.get("/messaging",isLoggedIn,function(req,res){
     res.render("./messaging/index",{
         id:req.user._id,
-        ip:process.env.IP
+        ip:process.env.IP,
+        port:process.env.PORT
     });
 });
 
@@ -314,8 +318,3 @@ function isLoggedIn(req,res,next){
         res.redirect('/login');
     }
 }
-
-// app server
-app.listen(process.env.PORT,process.env.IP,function(){
-    console.log("server started");
-});
