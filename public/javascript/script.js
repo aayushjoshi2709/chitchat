@@ -1,5 +1,5 @@
 // global variables
-var socket = io.connect(IP+':3000');
+var socket = io.connect('https://'+IP+':3000');
 var g_data;
 var current_id;
 
