@@ -48,6 +48,14 @@ col{
     width: auto;
     max-width: 45%;
 }
+.contact-last-msg{
+        white-space: nowrap;
+        overflow: hidden;
+        display: inline-block;
+        text-overflow: ellipsis;
+        font-size: small;
+        margin: 0;
+}
 /* width */
 ::-webkit-scrollbar {
     width: 10px;

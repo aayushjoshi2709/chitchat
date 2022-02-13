@@ -15,24 +15,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 // adding public dir to the app
 app.use(express.static(__dirname + "/public"));
-
-// configuring socket.io
-const httpServer = createServer(app);
-const io = new Server(httpServer,{ 
-    cors: {
-        origin: "http://"+process.env.IP+":"+process.env.PORT,
-        methods: ["GET", "POST"],
-        transports: ['websocket', 'polling'],
-        credentials: true
-    },
-    allowEIO3: true
- });
-
-io.on("connection", (socket) => {
-  console.log(socket.id);
-});
-httpServer.listen(3000);
-
 // creating user model with mongoose
 mongoose.connect(process.env.databaseURL);
 const userSchema = mongoose.Schema({
@@ -65,12 +47,73 @@ const messageSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    status: String,
+    status: {type: String, default:"NULL"},
     time: {type: Date, default: Date.now},
     message: String
 });
 var Message = mongoose.model("Message",messageSchema);
 
+// configuring socket.io
+const httpServer = createServer(app);
+const io = new Server(httpServer,{ 
+    cors: {
+        origin: "http://"+process.env.IP+":"+process.env.PORT,
+        methods: ["GET", "POST"],
+        transports: ['websocket', 'polling'],
+        credentials: true
+    },
+    allowEIO3: true
+ });
+
+// store socket id for a user on connection
+io.on("connection", (socket) => {
+    socket.on('user', function(data) {
+        User.findByIdAndUpdate(data,{socketid:socket.id},function(error,user){
+            if(error){
+                console.log("error in updation socket id")
+            }
+        })
+    });
+    socket.on('new_message',function(message){
+        User.findById(message.to,function(error,user){
+            if(user.socketid !== "NULL"){
+                io.to(user.socketid).emit("new_message", message);
+            }
+        });
+    })
+    socket.on('update_message_status_received',function(id){
+        Message.findByIdAndUpdate(id,{status:"received"},function(error,message){
+            if(error){
+                console.log("cannot update status");
+            }
+            User.findById(message.from,function(error,user)
+            {
+                if(user.socketid !== "NULL")
+                    io.to(user.socketid).emit('update_message_status_received', id);
+            })
+        });
+    })
+    socket.on('update_message_status_seen',function(id){
+        Message.findByIdAndUpdate(id,{status:"seen"},function(error,message){
+            if(error){
+                console.log("cannot update status");
+            }
+            User.findById(message.from,function(error,user)
+            {
+                if(user.socketid !== "NULL")
+                    io.to(user.socketid).emit('update_message_status_seen', id);
+            })
+        });
+    })
+    socket.on('disconnect', function () {
+        User.findOneAndUpdate({socketid:socket.id},{socketid:"NULL"},function(error,user){
+            if(error){
+                console.log("error in removing socket id")
+            }
+        })
+    });
+});
+httpServer.listen(3000);
 // passport configuration
 userSchema.plugin(passportLocalMongoose);
 var User = mongoose.model("User",userSchema);
@@ -90,7 +133,8 @@ app.post("/user/:id/message",function(req,res){
     var message = {
         from: mongoose.Types.ObjectId(req.params.id),
         to: mongoose.Types.ObjectId(req.body.to),
-        time: req.body.time,
+        time: req.body.time || Date.now(),
+        status:"sent",
         message: req.body.message
     };
     User.findById(message.to,function(error,toUser){
@@ -107,7 +151,7 @@ app.post("/user/:id/message",function(req,res){
                     toUser.save();
                     fromUser.messages.push(message._id);
                     fromUser.save();
-                    res.send("{status:success}");
+                    res.send(JSON.stringify({status:"success",id:message._id}));
                 })
             }
         })
@@ -120,10 +164,12 @@ function groupByKey(array,given_id) {
     var res = {} 
     array.forEach(ele=>{
         var msg ={
+            id: ele._id,
             message : ele.message,
             time: ele.time,
             from: ele.from._id,
             to: ele.to._id,
+            status:ele.status
         }
         if(ele.to._id == given_id){
             var id =ele.from._id;
@@ -186,7 +232,6 @@ app.get("/user/:id/message",function(req,res){
         }
     });
 });
-
 // create new friend route
 app.post("/user/:id/friend",function(req,res){
     User.findById(req.params.id,function(error,user){
@@ -205,10 +250,6 @@ app.get("/user/:id/friend",function(req,res){
         if(error) console.log(error);
         else{
             var friends = user.friends;
-            friends.forEach(element => {
-                delete element['messages'];
-                console.log(element);
-            });
             res.send(JSON.stringify(friends));
         }
     });
