@@ -1,5 +1,3 @@
-const { env } = require('process');
-
 const express                = require('express'),
       app                    = express(),
       mongoose               = require('mongoose'),
@@ -117,7 +115,7 @@ httpServer.listen(3000);
 // passport configuration
 userSchema.plugin(passportLocalMongoose);
 var User = mongoose.model("User",userSchema);
-app.use(require('express-session')({
+app.use(require('cookie-session')({
     secret:"hello world",
     resave:false,
     saveUninitialized: false
