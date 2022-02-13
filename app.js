@@ -111,7 +111,7 @@ io.on("connection", (socket) => {
         })
     });
 });
-httpServer.listen(process.env.PORT);
+httpServer.listen(3000);
 // passport configuration
 userSchema.plugin(passportLocalMongoose);
 var User = mongoose.model("User",userSchema);
@@ -296,8 +296,7 @@ app.post("/login",passport.authenticate("local",{
 app.get("/messaging",isLoggedIn,function(req,res){
     res.render("./messaging/index",{
         id:req.user._id,
-        ip:process.env.IP,
-        port:process.env.PORT
+        ip:process.env.IP
     });
 });
 
