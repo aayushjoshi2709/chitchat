@@ -304,6 +304,11 @@ app.delete("/user/:id/friend/",function(req,res){
         if(error) console.log(error);
         user.friends.remove(req.body.id);
         user.save();
+        User.findById(req.body.id,function(error,xfriend){
+            if(error) console.log(error);
+            xfriend.friends.remove(req.params.id);
+            xfriend.save();
+        })
         res.send(JSON.stringify({status:"success"}));
     });
 });
