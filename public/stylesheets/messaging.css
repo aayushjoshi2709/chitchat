@@ -10,6 +10,32 @@ body{
     body {
       padding: 0px;
     }
+    #main-container,.panels,.sub-container{
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }    
+
+    #contacts{
+        flex-grow: 1;
+    }
+    #messages{
+        flex-grow: 1;
+    }
+    #about-container{
+        position: relative;
+        background-color: rgba(255, 255, 255, 0.4);
+        width: 100vw;
+        height: 80vh;
+        padding: 0;
+        margin: 0;
+    }
+    #about-main-container{
+        margin: 0;
+        overflow: hidden;
+        overflow-y: scroll;
+    }
+    
 }
 .header{
     background-color: #3949AB;
@@ -17,6 +43,7 @@ body{
 #main-container{
     background-color: #BBF68c;
     min-height: 90vh;
+    z-index: 1;
 }
 #contacts{
     overflow-y: scroll;
@@ -48,6 +75,30 @@ col{
     width: auto;
     max-width: 45%;
 }
+.contact{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    background-color: blue;
+}
+.contact .name-last-time{
+    display: flex;
+    flex-direction: row;
+}
+.contact .name-last-time {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    background-color: red;
+}
+.name-last-time .name{
+    flex-grow: 1;
+    width: 90%;
+}
+.contact .column{
+    display: flex;
+    flex-direction: column;
+}
 .contact-last-msg{
         white-space: nowrap;
         overflow: hidden;
@@ -56,6 +107,43 @@ col{
         font-size: small;
         margin: 0;
 }
+#about-container{
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.4);
+    margin: 5vh 2vw;
+    width: 96vw;
+    z-index: 2;
+    min-height: 91vh;   
+    padding: 2rem;
+}
+.img-fluid .rounded-circle,.img-thumbnail .rounded-circle{
+    height: 200px;
+    width: 200px;
+    border: none;
+    
+}
+.about-container-row{
+    min-height: 70vh;
+}
+.add-friend-group, .footer-sent{
+    display: flex;
+    flex-direction: row;
+}
+.add-friend-group input[text], .footer-sent input[text]{
+    flex-grow: 1;
+}
+.add-friend-group button{
+    min-width: 105px;
+    height: 40px;
+    margin-left: 10px;
+    margin-top: 1rem;
+}
+.footer-sent button{
+    margin-left: 10px;
+}
+
 /* width */
 ::-webkit-scrollbar {
     width: 10px;

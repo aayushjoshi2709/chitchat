@@ -2,7 +2,7 @@
 var socket = io.connect();
 var g_data;
 var current_id;
-
+var g_friends;
 socket.on('connect',function(){ 
     // Send emit user id right after connect
     socket.emit('user', user_id);
@@ -34,9 +34,104 @@ function getData(){
     )
 }
 
+// get friends
+function getFriends(){
+    let url = "/user/"+user_id+"/friend";
+    document.getElementById("friends-table-body").innerHTML ="";
+    fetch(url).then(response => response.json()).then(
+        friends =>{
+            let count  =1;
+            g_friends = friends;
+            friends.forEach(data=>{
+            let tr =`<tr>
+                <th scope="row">${count}</th>
+                    <td>${data.firstName + " " + data.lastName }</td>
+                    <td>${data.email}</td>
+                    <td>@${data.username}</td>
+                    <td class="d-flex justify-content-end"><button onclick="deleteFriend(this,'${data._id}')" class="btn btn-danger">Remove</button></td>
+                </tr>`;    
+            count++;
+            document.getElementById("friends-table-body").innerHTML = document.getElementById("friends-table-body").innerHTML +tr;
+            });    
+        } 
+    )
+}
+//delete friend
+function deleteFriend(ele,id){
+    child = ele.parentElement.parentElement;
+    ele.parentElement.parentElement.parentElement.removeChild(child);
+    let url ="/user/"+user_id+"/friend/?_method=delete";
+    let msg = {
+        id : id
+    }
+    fetch(url, {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify(msg)
+    }).then(response=>response.json()).then(
+       getFriends()
+    );   
+}
 // get all the data from the server
 getData();
+getFriends();
 
+document.getElementById("about-container").style.visibility ="hidden";
+document.getElementById("about-trigger").addEventListener("click",function(){
+    document.getElementById("about-container").style.visibility ="visible";
+});
+document.getElementById("about-close").addEventListener("click",function(){
+    document.getElementById("about-container").style.visibility ="hidden";
+})
+
+document.getElementById("friends-container").style.display="none";
+document.getElementById("friends-container-trigger").addEventListener("click",function(){
+    getFriends();
+    document.getElementById("details-container").style.display = "none";
+    document.getElementById("friends-container").style.display = "block";
+    document.getElementById("details-container-trigger").classList.remove("active");
+    document.getElementById("friends-container-trigger").classList.add("active");
+})
+document.getElementById("details-container-trigger").addEventListener("click",function(){
+    document.getElementById("details-container").style.display = "block";
+    document.getElementById("friends-container").style.display = "none";
+    document.getElementById("details-container-trigger").classList.add("active");
+    document.getElementById("friends-container-trigger").classList.remove("active");
+
+})
+document.getElementById("friend-add-search-table").style.display = "none";
+document.getElementById("friend-add-search-text").addEventListener("keydown",function(){
+    let text = document.getElementById("friend-add-search-text").value;
+    
+    fetch(`/user/${user_id}/friend/search/${text}`, {
+    }).then(response=>response.json()).then(
+        data=>{
+            if(data.length >0)
+            {
+                document.getElementById("friend-add-search-table").style.display = "block";
+                document.getElementById("friends-search-body").innerHTML =" ";
+                    
+                data.forEach(ele=>{
+                    let count =1;
+                    let tr =`<tr>
+                            <th scope="row">${count}</th>
+                                <td>${ele.firstName + " " + ele.lastName }</td>
+                                <td>${ele.email}</td>
+                                <td>@${ele.username}</td>
+                                <td class="d-flex justify-content-end"><button onclick="addFriend('${ele._id}')" class="btn btn-success">Add</button></td>
+                            </tr>`;
+                    document.getElementById("friends-search-body").innerHTML =document.getElementById("friends-search-body").innerHTML + tr;
+                    count ++;  
+                }
+                );
+            }else{
+                document.getElementById("friend-add-search-table").style.display = "none";
+
+            }
+        }
+    );
+
+});
 // check all the recieved messages 
 function checkRecieved(){
     for(let key in g_data)
@@ -68,7 +163,7 @@ function showContacts(){
                 </div>
                 <div class="col-10 ">
                     <div class="row ">
-                        <div class="col-8">
+                        <div id="name" class="col-8">
                             ${g_data[key].name}
                         </div>
                         <div class="col-4 text-end text-muted" style="font-size: small; text-align: end;">
@@ -93,16 +188,19 @@ function showContacts(){
 
 // show all the messages from currently selected user
 function showMessages(ele,id){
+    current_id = id;
+    
+    let messages = document.getElementById("messages");
+    let friend_name = document.getElementById("friend-name");
+    var name = ele.children[0].children[1].children[0].children[0].innerHTML;
+    friend_name.textContent = g_data[id]?g_data[id].name:name;
+    messages.innerHTML = " ";
+    if(g_data[id]){
     if(g_data[id].received >0){
         var element = ele.children[0].children[1].children[1].children[1].children[0];
         element.parentElement.removeChild(element);
     }
     g_data[id].received =0;
-    current_id = id;
-    let messages = document.getElementById("messages");
-    let friend_name = document.getElementById("friend-name");
-    friend_name.textContent = g_data[id].name;
-    messages.innerHTML = " ";
     g_data[id].messages.forEach(
         message=>{
             if(message.status &&(message.to == user_id && (message.status == "received" || message.status == "sent"))){
@@ -130,6 +228,7 @@ function showMessages(ele,id){
         }
     );
     messages.scrollTop = messages.scrollHeight;
+    }    
 }
 
 // comparator for sort messages function
@@ -164,6 +263,17 @@ document.getElementById("sendText").addEventListener("keypress",function(key){
     }
 });
 
+var friend_data;
+// get friends data
+function getFriendData(id)
+{
+    g_friends.forEach(data =>{
+        if(data._id == id){ 
+            friend_data = data
+        }
+    });
+}
+
 // function for sending messages
 document.getElementById("sendButton").addEventListener("click",function(){
     let msgVal = document.getElementById("sendText");
@@ -193,9 +303,20 @@ document.getElementById("sendButton").addEventListener("click",function(){
                             <div>`;
                 messages.innerHTML = messages.innerHTML + msgdiv;
                 messages.scrollTop = messages.scrollHeight;
-                msgVal.value = "";        
-                g_data[current_id].messages.push(message);
-                g_data[current_id].lasttime = message.time;
+                msgVal.value = "";  
+                if(g_data[current_id])
+                    g_data[current_id].messages.push(message);
+                else{
+                    getFriendData(current_id);
+                    var message_data = {
+                        messages:[message],
+                        lasttime: Date.now(),
+                        name: friend_data.firstName +" "+friend_data.lastName,
+                        received: 0,
+                        username: friend_data.username,
+                    }
+                    g_data[current_id] = message_data;
+                }
                 g_data = sortMessages(g_data);
                 showContacts();
             }
@@ -203,12 +324,24 @@ document.getElementById("sendButton").addEventListener("click",function(){
         
     }
 });
-
+function addFriend(friend){
+    let url ="/user/"+user_id+"/friend/";
+    let msg = {
+        friend_id : friend
+    }
+    fetch(url, {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify(msg)
+    }).then(()=>{
+        getFriends();
+        socket.emit("add_friend",friend);
+    }); 
+}
 // function to be triggered if user recives a realtime new message
 socket.on('new_message',function(message){
     socket.emit('update_message_status_received',message.id);     
     message.status = "received";
-    
     if(message.from == current_id){
         let messages = document.getElementById("messages");
         let data =` <div class="d-flex ${message.from == user_id?'justify-content-end':'justify-content-start'}">
@@ -222,14 +355,73 @@ socket.on('new_message',function(message){
         messages.innerHTML = messages.innerHTML + data;
         messages.scrollTop = messages.scrollHeight;     
     }else{
+        if(g_data[message.from]){
+            g_data[message.from].received = g_data[message.from].received + 1;
+        } 
+    }
+    if(g_data[message.from]){
+        g_data[message.from].messages.push(message);
+        g_data[message.from].lasttime = message.time;
+    }else{
+        getFriendData(message.from);
+        var message_data = {
+            messages:[message],
+            lasttime: message.time,
+            name: friend_data.firstName +" "+friend_data.lastName,
+            received: 0,
+            username: friend_data.username,
+        }
+        g_data[message.from] = message_data;
         g_data[message.from].received = g_data[message.from].received + 1;
     }
-    g_data[message.from].messages.push(message);
-    g_data[message.from].lasttime = message.time;
     g_data = sortMessages(g_data);
     showContacts();
 });
-
+// function for search
+document.getElementById("friend-search").addEventListener("keydown",function(){
+    let contacts = document.getElementById("contacts");
+    if(document.getElementById("friend-search").value.length == 0){
+        showContacts();
+    }else{
+    let text =document.getElementById("friend-search").value.toLowerCase(); 
+    g_friends.forEach(data=>{
+        
+        if((data.firstName +" "+data.lastName).toLowerCase().includes(text)){
+            contacts.innerHTML = "";
+            let friend = `
+                <div class="card p-3" onclick="showMessages(this,'${data._id}')">
+                    <div class="row">
+                    <div class="col-1"style="width: 42px;" >
+                        <img src="https://winaero.com/blog/wp-content/uploads/2019/11/Photos-new-icon.png" class="rounded-circle" width="42px" height="42px">
+                    </div>
+                    <div class="col-10 ">
+                        <div class="row ">
+                            <div id="name" class="col-8">
+                                ${(data.firstName +" "+data.lastName)}
+                            </div>
+                            <div class="col-4 text-end text-muted" style="font-size: small; text-align: end;">
+                                ${(g_data[data._id])?getTime(g_data[data._id].lasttime):""}
+                            </div>
+                        </div>
+                        <div class ="row">
+                            <div class="col-8 contact-last-msg text-muted" >
+                                ${(g_data[data._id])?g_data[data._id].messages[(g_data[data._id].messages.length-1)].message+"...":""}
+                            </div>
+                            ${(g_data[data._id])?(g_data[data._id].received>0?
+                                `<div class="col-4 d-flex justify-content-end " style="font-size: small; text-align: end;">
+                                    <div style="background-color:green;width:20px;border-radius:50%;text-align:center;">
+                                        ${g_data[data._id].received}</div> 
+                                </div>`:''):''}
+                            
+                        </div>
+                        
+                    </div>	
+                </div>`;
+            contacts.innerHTML = contacts.innerHTML  +friend;
+        }   
+    });
+    }
+});
 // function to be triggered if user recieves seen event
 socket.on('update_message_status_seen',function(id){
     let div = document.getElementById(id);
@@ -240,4 +432,12 @@ socket.on('update_message_status_seen',function(id){
 socket.on('update_message_status_received',function(id){
     let div = document.getElementById(id);
     div.innerHTML = div.innerHTML.substring(0,6) + '<i class="fa-solid fa-check-double"></i>';
+});
+
+// update on add friends
+socket.on('add_friend',function(id){
+    if(id == user_id)
+    {
+        getFriends();
+    }
 });

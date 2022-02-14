@@ -1,4 +1,5 @@
-const { env } = require('process');
+const { query } = require('express');
+
 const express                = require('express'),
       app                    = express(),
       mongoose               = require('mongoose'),
@@ -6,6 +7,9 @@ const express                = require('express'),
       passport               = require('passport'),
       localStrategy          = require('passport-local'),
       passportLocalMongoose  = require('passport-local-mongoose');
+      methodOverride         = require('method-override');
+
+app.use(methodOverride('_method'));
 app.set("view engine","ejs");
 // set app to user body parser
 app.use(bodyParser.json());
@@ -95,6 +99,16 @@ io.on("connection", (socket) => {
             })
         });
     })
+    socket.on('add_friend',function(id){
+        User.findById(id,function(error,user){
+            if(error) console.log(error);
+            else{
+                if(user.socketid !=="NULL"){
+                    io.to(user.socketid).emit('add_friend', id);
+                }
+            }
+        });
+    })
     socket.on('update_message_status_seen',function(id){
         Message.findByIdAndUpdate(id,{status:"seen"},function(error,message){
             if(error){
@@ -148,9 +162,21 @@ app.post("/user/:id/message",function(req,res){
                     if(error){
                         console.log(error);
                     }
-                    toUser.messages.push(message._id);
+                    if('messages' in toUser)
+                        toUser.messages.push(message._id);
+                    else{
+                        toUser.messages =[];
+                        toUser.messages.push(message._id);
+                    }
                     toUser.save();
-                    fromUser.messages.push(message._id);
+                    if('messages' in fromUser)
+                    {
+                        fromUser.messages.push(message._id);
+                    }else{
+                        fromUser.messages =[];
+                        fromUser.messages.push(message._id);
+                    }
+                    
                     fromUser.save();
                     res.send(JSON.stringify({status:"success",id:message._id}));
                 })
@@ -196,6 +222,7 @@ function groupByKey(array,given_id) {
     });
     return res;
 }
+
 // sort grouped messages by last recieved custom comparator
 function comparator(a,b){
     
@@ -240,11 +267,17 @@ app.post("/user/:id/friend",function(req,res){
         else{
             user.friends.push(mongoose.Types.ObjectId(req.body.friend_id));
             user.save();
+            User.findById(req.body.friend_id,function(error,friend){
+                if(error) console.log(error);
+                else{
+                    friend.friends.push(mongoose.Types.ObjectId(req.params.id));
+                    friend.save();
+                }    
+            });
             res.send("{status:success}");
         }
     });
 });
-
 // get all friends route
 app.get("/user/:id/friend",function(req,res){
     User.findById(req.params.id).populate('friends').exec(function(error,user){
@@ -255,7 +288,25 @@ app.get("/user/:id/friend",function(req,res){
         }
     });
 });
-
+// search friends by name
+app.get("/user/:id/friend/search/:query",function(req,res){
+    let query = req.params.query;
+    User.find({username:query} ,function(error,user){
+        if(error) console.log(error);
+        else{
+            res.send(JSON.stringify(user));
+        }
+    });
+});
+// delete friend
+app.delete("/user/:id/friend/",function(req,res){
+    User.findById(req.params.id,function(error,user){
+        if(error) console.log(error);
+        user.friends.remove(req.body.id);
+        user.save();
+        res.send(JSON.stringify({status:"success"}));
+    });
+});
 // root route
 app.get("/",function(req,res){
     res.render('index')
@@ -268,7 +319,7 @@ app.get("/register",function(req,res){
 // create user route
 app.post("/register",function(req,res){
     //adding the user to database
-    var user = {
+    let user = {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
@@ -298,7 +349,7 @@ app.post("/login",passport.authenticate("local",{
 // messaging route
 app.get("/messaging",isLoggedIn,function(req,res){
     res.render("./messaging/index",{
-        id:req.user._id,
+        user: req.user,
         ip:process.env.IP,
         port:process.env.PORT
     });
