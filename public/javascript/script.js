@@ -37,7 +37,6 @@ function getData(){
 // get friends
 function getFriends(){
     let url = "/user/"+user_id+"/friend";
-    document.getElementById("friends-table-body").innerHTML ="";
     fetch(url).then(response => response.json()).then(
         friends =>{
             let count  =1;
@@ -51,87 +50,10 @@ function getFriends(){
                     <td class="d-flex justify-content-end"><button onclick="deleteFriend(this,'${data._id}')" class="btn btn-danger">Remove</button></td>
                 </tr>`;    
             count++;
-            document.getElementById("friends-table-body").innerHTML = document.getElementById("friends-table-body").innerHTML +tr;
             });    
         } 
     )
 }
-//delete friend
-function deleteFriend(ele,id){
-    child = ele.parentElement.parentElement;
-    ele.parentElement.parentElement.parentElement.removeChild(child);
-    let url ="/user/"+user_id+"/friend/?_method=delete";
-    let msg = {
-        id : id
-    }
-    fetch(url, {
-        method: "POST",
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify(msg)
-    }).then(response=>response.json()).then(
-       getFriends()
-    );   
-}
-// get all the data from the server
-getData();
-getFriends();
-
-document.getElementById("about-container").style.visibility ="hidden";
-document.getElementById("about-trigger").addEventListener("click",function(){
-    document.getElementById("about-container").style.visibility ="visible";
-});
-document.getElementById("about-close").addEventListener("click",function(){
-    document.getElementById("about-container").style.visibility ="hidden";
-})
-
-document.getElementById("friends-container").style.display="none";
-document.getElementById("friends-container-trigger").addEventListener("click",function(){
-    getFriends();
-    document.getElementById("details-container").style.display = "none";
-    document.getElementById("friends-container").style.display = "block";
-    document.getElementById("details-container-trigger").classList.remove("active");
-    document.getElementById("friends-container-trigger").classList.add("active");
-})
-document.getElementById("details-container-trigger").addEventListener("click",function(){
-    document.getElementById("details-container").style.display = "block";
-    document.getElementById("friends-container").style.display = "none";
-    document.getElementById("details-container-trigger").classList.add("active");
-    document.getElementById("friends-container-trigger").classList.remove("active");
-
-})
-document.getElementById("friend-add-search-table").style.display = "none";
-document.getElementById("friend-add-search-text").addEventListener("keydown",function(){
-    let text = document.getElementById("friend-add-search-text").value;
-    
-    fetch(`/user/${user_id}/friend/search/${text}`, {
-    }).then(response=>response.json()).then(
-        data=>{
-            if(data.length >0)
-            {
-                document.getElementById("friend-add-search-table").style.display = "block";
-                document.getElementById("friends-search-body").innerHTML =" ";
-                    
-                data.forEach(ele=>{
-                    let count =1;
-                    let tr =`<tr>
-                            <th scope="row">${count}</th>
-                                <td>${ele.firstName + " " + ele.lastName }</td>
-                                <td>${ele.email}</td>
-                                <td>@${ele.username}</td>
-                                <td class="d-flex justify-content-end"><button onclick="addFriend('${ele._id}')" class="btn btn-success">Add</button></td>
-                            </tr>`;
-                    document.getElementById("friends-search-body").innerHTML =document.getElementById("friends-search-body").innerHTML + tr;
-                    count ++;  
-                }
-                );
-            }else{
-                document.getElementById("friend-add-search-table").style.display = "none";
-
-            }
-        }
-    );
-
-});
 // check all the recieved messages 
 function checkRecieved(){
     for(let key in g_data)
@@ -324,20 +246,6 @@ document.getElementById("sendButton").addEventListener("click",function(){
         
     }
 });
-function addFriend(friend){
-    let url ="/user/"+user_id+"/friend/";
-    let msg = {
-        friend_id : friend
-    }
-    fetch(url, {
-        method: "POST",
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify(msg)
-    }).then(()=>{
-        getFriends();
-        socket.emit("add_friend",friend);
-    }); 
-}
 // function to be triggered if user recives a realtime new message
 socket.on('new_message',function(message){
     socket.emit('update_message_status_received',message.id);     
@@ -441,3 +349,6 @@ socket.on('add_friend',function(id){
         getFriends();
     }
 });
+// get all the data from the server
+getData();
+getFriends();

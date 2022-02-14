@@ -21,21 +21,7 @@ body{
     }
     #messages{
         flex-grow: 1;
-    }
-    #about-container{
-        position: relative;
-        background-color: rgba(255, 255, 255, 0.4);
-        width: 100vw;
-        height: 80vh;
-        padding: 0;
-        margin: 0;
-    }
-    #about-main-container{
-        margin: 0;
-        overflow: hidden;
-        overflow-y: scroll;
-    }
-    
+    }    
 }
 .header{
     background-color: #3949AB;
@@ -107,39 +93,13 @@ col{
         font-size: small;
         margin: 0;
 }
-#about-container{
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: rgba(255, 255, 255, 0.4);
-    margin: 5vh 2vw;
-    width: 96vw;
-    z-index: 2;
-    min-height: 91vh;   
-    padding: 2rem;
-}
-.img-fluid .rounded-circle,.img-thumbnail .rounded-circle{
-    height: 200px;
-    width: 200px;
-    border: none;
-    
-}
-.about-container-row{
-    min-height: 70vh;
-}
-.add-friend-group, .footer-sent{
+.footer-sent{
     display: flex;
     flex-direction: row;
 }
-.add-friend-group input[text], .footer-sent input[text]{
+ .footer-sent input[text]{
     flex-grow: 1;
-}
-.add-friend-group button{
-    min-width: 105px;
-    height: 40px;
-    margin-left: 10px;
-    margin-top: 1rem;
-}
+ }
 .footer-sent button{
     margin-left: 10px;
 }

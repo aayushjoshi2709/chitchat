@@ -355,12 +355,19 @@ app.get("/messaging",isLoggedIn,function(req,res){
     });
 });
 
+app.get("/about",function(req,res){
+    res.render("./about/about",{
+        user: req.user,
+        ip:process.env.IP,
+        port:process.env.PORT
+    });
+});
+
 // logout route
 app.get("/logout",function(req,res){
     req.logout();
     res.redirect("/");
 });
-
 // check if the user is logged in or not
 function isLoggedIn(req,res,next){
     if(req.isAuthenticated()){

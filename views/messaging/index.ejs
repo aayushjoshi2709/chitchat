@@ -15,9 +15,11 @@
 	<div class="container-fluid" id="main-container">
 		<div class="sub-container row">
 			<div class="panels col-md-4 m-0 p-0" >
-				<div id="about-trigger" class="card p-2 header">
-					<img src="https://winaero.com/blog/wp-content/uploads/2019/11/Photos-new-icon.png" class="rounded-circle" width="42px" height="42px">
-				</div>
+				<a href="/about">
+					<div class="card p-2 header">
+						<img src="https://winaero.com/blog/wp-content/uploads/2019/11/Photos-new-icon.png" class="rounded-circle" width="42px" height="42px">
+					</div>
+				</a>
 				<div class="card p-3">
 					<input id="friend-search" type="text" class="form-control p-1 px-3 rounded-pill" placeholder="Enter friend name to search...">
 				</div>
@@ -50,112 +52,6 @@
 						<div class="footer-sent">
 							<input id="sendText" type="text" class="form-control p-2 rounded-pill " placeholder="Enter the text to be sent...">
 							<button id="sendButton" class="btn btn-success float-right">Send</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="container-fluid"  id="about-container">
-		<div id="about-main-container" class="container-fluid card h-100 p-0">
-			<div class="card p-2 header">
-				<i id="about-close" class="fa-solid fa-circle-xmark ms-auto" style="font-size: 32px;"></i>	
-			</div>	
-			<div class="row about-container-row">
-				
-				<div class="col-md-4 h-100 p-5 d-flex justify-content-center">
-						<div class="text-center">
-							<div class="img-thumbnail rounded">
-								<img class="img-fluid rounded" src="https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885__480.jpg">
-							</div>
-							<h1 class="display-5 text-center mt-2"><%= user.firstName +" "+user.lastName%></h1>
-							<p class="display-5 text-center mt-2" style="font-size: larger;">@<%=user.username%></p>
-							<a class="mt-2 btn btn-success btn-lg" href="/logout">Logout</a>
-						</div>
-				</div>
-				<div class="col-md-8 h-100 p-5">
-					<div class="row">
-						<ul class="nav nav-tabs">
-							<li class="nav-item">
-								<a id="details-container-trigger" class="nav-link active" aria-current="page" href="#">Details</a>
-							</li>
-							<li class="nav-item">
-								<a id="friends-container-trigger" class="nav-link" href="#">Friends</Details></a>
-							</li>
-						</ul>
-					</div>	
-					<div id="details-container" class="row">
-						<form class="mt-4" action="" method="post">
-							<h1 class="display-5 text-center">User Details Page</h1>
-							<div class="form-group m-2 mt-4">
-								<input type="text" class="form-control"  required name="firstName" value="<%=user.firstName%>">
-							</div>
-							<div class="form- m-2">
-								<input type="text" class="form-control" required name="lastName" value="<%=user.lastName%>">
-							</div>
-							<div class="form-group m-2">
-								<input type="email" class="form-control" required name="email" value="<%=user.email%>">
-							</div>
-							<div class="form-group m-2">
-								<input type="text" class="form-control" required name="username" value="<%=user.username%>">
-							</div>
-							<div class="text-center">
-								<button type="submit" class="btn btn-primary btn-block">Update Data</button>
-								<a href="/messaging" class="btn btn-danger btn-block">Close</a>
-							</div>
-						</form>
-					</div>
-					<div id="friends-container" class="row" >
-						<div  class="row">
-							<input id="friend-add-search-text" type="text" class="form-control my-3" placeholder="Search a friend by user Handle to add..." >
-							<div style="overflow-x:hidden;overflow-y: scroll;height: 40vh;">
-								<div class="table-responsive" >
-									<table id="friend-add-search-table" class="table table-striped" width="100%">
-										<col style="width:10%">
-										<col style="width:20%">
-										<col style="width:20%">
-										<col style="width:20%">
-										<col style="width:10%">
-										<thead>
-											<tr>
-												<th scope="col">#</th>
-												<th scope="col">Name</th>
-												<th scope="col">Email</th>
-												<th scope="col">Handle</th>
-												<th scope="col">Add</th>
-											</tr>
-										</thead>
-										<tbody id="friends-search-body">
-	
-										</tbody>
-									</table>
-								</div>		
-							<h3 class="h3">Current Friends</h3>
-							<hr>
-							<div class="row">
-								<div class="table-responsive">
-									<table class="table table-striped" width="100%">
-										<col style="width:10%">
-										<col style="width:20%">
-										<col style="width:20%">
-										<col style="width:20%">
-										<col style="width:10%">
-										<thead>
-											<tr>
-												<th scope="col">#</th>
-												<th scope="col">Name</th>
-												<th scope="col">Email</th>
-												<th scope="col">Handle</th>
-												<th scope="col">Remove</th>
-											</tr>
-										</thead>
-										<tbody id="friends-table-body">
-											
-										</tbody>
-									</table>
-								</div>
-							</div>
-							</div>
 						</div>
 					</div>
 				</div>
