@@ -110,8 +110,8 @@ function showContacts(){
 
 // show all the messages from currently selected user
 function showMessages(ele,id){
+    document.getElementById("right-pane").style.visibility ="visible";
     current_id = id;
-    
     let messages = document.getElementById("messages");
     let friend_name = document.getElementById("friend-name");
     var name = ele.children[0].children[1].children[0].children[0].innerHTML;
@@ -349,6 +349,9 @@ socket.on('add_friend',function(id){
         getFriends();
     }
 });
+// hide right pane initally
+document.getElementById("right-pane").style.visibility ="hidden";
+
 // get all the data from the server
 getData();
 getFriends();
