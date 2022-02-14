@@ -23,7 +23,10 @@
                         </div>
                         <h1 class="display-5 text-center mt-2"><%= user.firstName +" "+user.lastName%></h1>
                         <p class="display-5 text-center mt-2" style="font-size: larger;">@<%=user.username%></p>
-                        <a class="mt-2 btn btn-success btn-lg" href="/logout">Logout</a>
+                        <div class="mt-2">
+                            <a class="btn btn-success btn-lg" href="/logout">Logout</a>
+                            <a href="/messaging" class="btn btn-danger btn-lg">Close</a>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-8 h-100 p-5">
@@ -52,9 +55,8 @@
                             <div class="form-group m-2">
                                 <input type="text" class="form-control" required name="username" value="<%=user.username%>">
                             </div>
-                            <div class="text-center">
-                                <button type="submit" class="btn btn-primary btn-block">Update Data</button>
-                                <a href="/messaging" class="btn btn-danger btn-block">Close</a>
+                            <div class="text-center mt-3">
+                                <button type="submit" class="btn btn-primary btn-lg">Update Data</button>
                             </div>
                         </form>
                     </div>
