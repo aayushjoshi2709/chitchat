@@ -1,17 +1,14 @@
 <%- include("../partials/header") %>
 	<div class="container">
 		<div class="row">
-			<div class="col-sm-10 col-md-6" style="margin:30px auto;">
-				<div class="p-4" style="background-color:rgba(225,225,225,0.4);">
+			<div class="col-sm-10 col-md-6" style="margin:30px auto; margin-bottom: 20px;">
+				<div class="p-2" style="background-color:rgba(225,225,225,0.4);">
 					<form action="/register" method="post" enctype="multipart/form-data">
 							<h1 class="display-1 m-2" style="text-align:center;">Sign Up</h1>
-							<div class="form-group m-2 mt-2 text-center">
-								<img id="blah" src="https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png" alt="your image" style="height: 200px; width: 200px; border-radius: 50%;"/>
+							<div class="form-group m-2 text-center">
+								<img id="blah" src="https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png"  onclick="document.getElementById('image').click();" alt="your image" style="height: 200px; width: 200px; border-radius: 50%;"/>
 								<input id="image" type="file" style="display: none;" required name="userImage"/>
 							</div>		
-							<div class="form-group text-center">
-								<input type="button" class="btn btn-success" value="Choose Image..." onclick="document.getElementById('image').click();" />
-							</div>	
 							<div class="form-group m-2">
 								<input type="text" class="form-control" placeholder="First Name" required name="firstName">
 							</div>
