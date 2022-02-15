@@ -1,5 +1,3 @@
-const { query } = require('express');
-
 const express                = require('express'),
       app                    = express(),
       mongoose               = require('mongoose'),
@@ -8,14 +6,41 @@ const express                = require('express'),
       localStrategy          = require('passport-local'),
       passportLocalMongoose  = require('passport-local-mongoose');
       methodOverride         = require('method-override');
-
+      multer                 = require('multer');
 app.use(methodOverride('_method'));
 app.set("view engine","ejs");
+
+// configuring multer for file upload
+
+const storage = multer.diskStorage({
+    destination: function(req,file,cb){
+        cb(null,'./uploads/');
+    },
+    filename: function(req,file,cb){
+        cb(null,new Date().toISOString().replace(/:/g, '-') +file.originalname);
+    }   
+})
+const fileFilter = (req,file,cb)=>{
+    if(file.mimetype ==='image/jpeg' || file.mimetype ==='image/png'){
+        cb(null,true);
+    }else{
+        cb(null,false);
+    }
+}
+const upload = multer({storage:storage,
+    limits:{
+        fileSize : 1024*1024*5
+    },
+    fileFilter :fileFilter
+})
+
+
 // set app to user body parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 // adding public dir to the app
 app.use(express.static(__dirname + "/public"));
+app.use('/uploads',express.static('uploads'));
 // creating user model with mongoose
 mongoose.connect(process.env.databaseURL);
 const userSchema = mongoose.Schema({
@@ -25,6 +50,7 @@ const userSchema = mongoose.Schema({
     password: String,
     username: String,
     socketid: String,
+    image: String,
     messages: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -322,13 +348,15 @@ app.get("/register",function(req,res){
     res.render("./user/new");
 });
 // create user route
-app.post("/register",function(req,res){
+app.post("/register",upload.single('userImage'),function(req,res){
     //adding the user to database
+    console.log(req.file);
     let user = {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
-        username: req.body.username
+        username: req.body.username,
+        image: req.file.path
     }
     User.register(new User(user),req.body.password,function(error,user){
         if(error){ 

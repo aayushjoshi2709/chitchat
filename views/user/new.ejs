@@ -3,12 +3,19 @@
 		<div class="row">
 			<div class="col-sm-10 col-md-6" style="margin:30px auto;">
 				<div class="p-4" style="background-color:rgba(225,225,225,0.4);">
-					<form action="/register" method="post">
+					<form action="/register" method="post" enctype="multipart/form-data">
 							<h1 class="display-1 m-2" style="text-align:center;">Sign Up</h1>
-							<div class="form-group m-2 mt-4">
+							<div class="form-group m-2 mt-4 text-center">
+								<img id="blah" src="https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png" alt="your image" style="height: 200px; width: 200px; border-radius: 50%;"/>
+								<input id="image" type="file" style="display: none;" required name="userImage"/>
+							</div>		
+							<div class="form-group text-center">
+								<input type="button" class="btn btn-success" value="Choose Image..." onclick="document.getElementById('image').click();" />
+							</div>	
+							<div class="form-group m-2">
 								<input type="text" class="form-control" placeholder="First Name" required name="firstName">
 							</div>
-							<div class="form- m-2">
+							<div class="form-group m-2">
 								<input type="text" class="form-control" placeholder="Last Name" required name="lastName">
 							</div>
 							<div class="form-group m-2">
@@ -35,4 +42,12 @@
 			</div>
 		</div>
 	</div>
+	<script>
+		document.getElementById("image").onchange = evt => {
+			const [file] = document.getElementById("image").files
+			if (file) {
+				blah.src = URL.createObjectURL(file)
+			}
+		}
+	</script>
 <%-include("../partials/footer")%>
