@@ -13,6 +13,21 @@ window.addEventListener("onbeforeunload", function (e) {
     socket.disconnect();
 });
 
+function myFunction(x) {
+    if (x.matches) { // If media query matches
+        document.getElementById("back-button").style.display ="block";
+    } else {        
+        document.getElementById("back-button").style.display ="none";
+
+    }
+}
+  
+  var x = window.matchMedia("(max-width: 800px)")
+  myFunction(x) 
+  x.addListener(myFunction)
+
+
+
 // convert date object string to time
 function getTime(str){
     let today = new Date(str);
@@ -78,6 +93,7 @@ function showContacts(){
     for(let key in g_data)
     {
         let friend = `
+        <a href="#right-pane-div">
             <div class="card p-3" onclick="showMessages(this,'${key}')">
                 <div class="row">
                 <div class="col-1"style="width: 42px;" >
@@ -103,7 +119,8 @@ function showContacts(){
                     </div>
                     
                 </div>	
-            </div>`;
+            </div>
+        </a>`;
                 contacts.innerHTML = contacts.innerHTML  +friend;
     }
 }
@@ -114,7 +131,8 @@ function showMessages(ele,id){
     current_id = id;
     let messages = document.getElementById("messages");
     let friend_name = document.getElementById("friend-name");
-    var name = ele.children[0].children[1].children[0].children[0].innerHTML;
+    console.log( ele)
+    var name = ele.children[0].children[0].children[1].children[0].children[1].innerHTML;
     friend_name.textContent = g_data[id]?g_data[id].name:name;
     messages.innerHTML = " ";
     if(g_data[id]){
@@ -217,7 +235,7 @@ document.getElementById("sendButton").addEventListener("click",function(){
                 message.id = data.id;
                 socket.emit('new_message',message);
                 let messages = document.getElementById("messages");
-                let msgdiv =`<div class="d-flex ${message.from == user_id?'justify-content-end':'justify-content-start'}">
+                let msgdiv =`<div  class="d-flex ${message.from == user_id?'justify-content-end':'justify-content-start'}">
                                     <div class ="card msg ${message.from == user_id?'color-green':'bg-light'} p-1 m-1 rounded">
                                         <div>${message.message}</div>
                                     <div  id="${message.id}" class="text-muted text-end" style="font-size:small">${getTime(message.time)} <i class="fa-solid fa-check"></i></div>
@@ -297,6 +315,7 @@ document.getElementById("friend-search").addEventListener("keydown",function(){
         if((data.firstName +" "+data.lastName).toLowerCase().includes(text)){
             contacts.innerHTML = "";
             let friend = `
+            <a href="#right-pane-div">
                 <div class="card p-3" onclick="showMessages(this,'${data._id}')">
                     <div class="row">
                     <div class="col-1"style="width: 42px;" >
@@ -324,7 +343,8 @@ document.getElementById("friend-search").addEventListener("keydown",function(){
                         </div>
                         
                     </div>	
-                </div>`;
+                </div>
+            </a>`;
             contacts.innerHTML = contacts.innerHTML  +friend;
         }   
     });
