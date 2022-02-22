@@ -1,4 +1,3 @@
 /* files to be ignored by github*/
 package-lock.json
 node_modules
-uploads
