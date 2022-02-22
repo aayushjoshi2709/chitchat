@@ -131,13 +131,12 @@ function showMessages(ele,id){
     current_id = id;
     let messages = document.getElementById("messages");
     let friend_name = document.getElementById("friend-name");
-    console.log( ele)
     var name = ele.children[0].children[0].children[1].children[0].children[1].innerHTML;
     friend_name.textContent = g_data[id]?g_data[id].name:name;
     messages.innerHTML = " ";
     if(g_data[id]){
     if(g_data[id].received >0){
-        var element = ele.children[0].children[1].children[1].children[1].children[0];
+        var element = ele.children[0].children[0].children[1].children[1].children[0];
         element.parentElement.removeChild(element);
     }
     g_data[id].received =0;
