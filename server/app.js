@@ -7,6 +7,8 @@ const express                = require('express'),
       passportLocalMongoose  = require('passport-local-mongoose');
       methodOverride         = require('method-override');
       cors                   = require('cors');
+require('dotenv/config')
+require('./')
 app.use(methodOverride('_method'));
 app.set("view engine","ejs");
 app.use(cors({origin: "*"}))
