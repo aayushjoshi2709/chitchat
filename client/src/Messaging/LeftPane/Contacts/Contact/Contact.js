@@ -1,6 +1,6 @@
 import React from 'react'
 import MessageCount from './MessageCount/MessageCount'
-import '../../../Styles/Messaging.css'
+import '../../../Styles/messaging.css'
 function Contact(props) {
   return (
     <>

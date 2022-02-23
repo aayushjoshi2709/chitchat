@@ -1,5 +1,5 @@
 import React from 'react'
-import '../../../Styles/Messaging.css'
+import '../../Styles/messaging.css'
 import Contact from './Contact/Contact'
 function Contacts(props) {
   return (

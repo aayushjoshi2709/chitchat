@@ -26,7 +26,7 @@ const App = () => {
       let uname = event.target[0].value;
       let pass = event.target[1].value;
       await axios
-        .post("http://127.0.0.1:5000/login", {
+        .post("/login", {
           username: uname,
           password: pass,
         })
@@ -54,7 +54,7 @@ const App = () => {
     var username = event.target[3].value;
     var pass = event.target[4].value;
     await axios
-      .post("http://127.0.0.1:5000/register", {
+      .post("/register", {
         firstName: fname,
         lastName: lname,
         email: email,
