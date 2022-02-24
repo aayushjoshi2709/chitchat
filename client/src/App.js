@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import Main from "./Main/Main";
 import SignUp from "./SignUp/SignUp";
 import Messaging from "./Messaging/Messaging";
 import Login from "./Login/Login";
 import axios from "axios";
+import About from "./About/About";
+
 const App = () => {
   // states to store data for the user
   const [user, setUser] = useState(null);
@@ -12,39 +14,39 @@ const App = () => {
   const [messages, setMessages] = useState({});
   const [isRightOn, setIsRightOn] = useState(false);
   // get messages function
-  const getMessages = async () =>
-  {
-  
-  }
-  // const get friends
-  const getFriends = async () =>{
+  const getMessages = async () => {
 
   }
-    // login to the app
-    const login = async (event) => {
-      event.preventDefault();
-      let uname = event.target[0].value;
-      let pass = event.target[1].value;
-      await axios
-        .post("/login", {
-          username: uname,
-          password: pass,
-        })
-        .then(function (response) {
-          console.log(response);
-          if (response.status == 200) {
-            setUser(response.data);
-            console.log(user.messages);
-            setFriends(response.data.friends);
-            setMessages(response.data.messages);
-            window.location.href = "/messaging";
-          }
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-    };
-  
+  // const get friends
+  const getFriends = async () => {
+
+  }
+  // login to the app
+  const login = async (event) => {
+    event.preventDefault();
+    let uname = event.target[0].value;
+    let pass = event.target[1].value;
+    await axios
+      .post("/login", {
+        username: uname,
+        password: pass,
+      })
+      .then(function (response) {
+        console.log(response);
+        if (response.status == 200) {
+          setUser(response.data);
+          console.log(user.messages);
+          setFriends(response.data.friends);
+          setMessages(response.data.messages);
+          return true;
+        }
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+      return false;
+  };
+
   // sign up function
   const signUp = async (event) => {
     event.preventDefault();
@@ -67,15 +69,16 @@ const App = () => {
           console.log(user.messages);
           getMessages();
           getFriends();
-          window.location.href = "/messaging";
+          return true;
         }
       })
       .catch(function (error) {
         console.log(error);
       });
+      return false;
   };
   // logout function
-  const logOut = async function(){
+  const logOut = async function () {
     setUser({});
     setFriends({});
     setMessages({});
@@ -97,9 +100,10 @@ const App = () => {
         <Route
           exact
           path="/messaging"
-          element={<Messaging messages={messages} isRightOn = {isRightOn} setIsRightOn = {setIsRightOn} />}
+          element={<Messaging messages={messages} isRightOn={isRightOn} setIsRightOn={setIsRightOn} />}
         />
         <Route exact path="/register" element={<SignUp signUp={signUp} />} />
+        <Route exact path="/about" element={<About/>} />
       </Routes>
     </Router>
   );

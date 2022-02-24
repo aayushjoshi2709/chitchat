@@ -1,4 +1,5 @@
 import React from "react";
+import {Link} from "react-router-dom";
 const MainPage = ()=>{
     return(
     <>
@@ -6,7 +7,7 @@ const MainPage = ()=>{
         <div className="container" id="landing-header">
             <h1 className="display-1" id="header">Chit - Chat</h1>
             <p className="lead" id="header-li">A chatting app for all...</p>
-            <a href="/user/new" className="btn btn-light btn-lg">Sign Up</a>
+            <Link to="/register" className="btn btn-light btn-lg">Sign Up</Link>
         </div> 
         </div>
     </>)

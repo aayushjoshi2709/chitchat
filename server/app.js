@@ -15,6 +15,7 @@ app.use(cors({origin: "*"}))
 // set app to user body parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('../client/build/'));
 // adding public dir to the app
 app.use(express.static(__dirname + "/public"));
 // creating user model with mongoose
@@ -357,6 +358,11 @@ app.get("/logout",function(req,res){
     req.logout();
     res.status(200).send("logged out");
 });
+
+app.get("/",function(req,res){
+    res.sendFile('../client/build/index.html');
+});
+
 // check if the user is logged in or not
 function isLoggedIn(req,res,next){
     if(req.isAuthenticated()){
