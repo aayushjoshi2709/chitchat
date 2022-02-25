@@ -4,8 +4,10 @@ import '../../../Styles/messaging.css'
 function Contact(props) {
   return (
     <>
-        <a href="#right-pane-div" onClick={()=>{props.setIsRightOn(true)}}>
-            <div className="card p-3" >
+        
+            <div className="card p-3" onClick={()=>{
+                props.loadMessages(props.id);
+            }} >
                 <div className="row">
                     <div className="col-1"style={{width: '42px'}} >
                         <img src="https://winaero.com/blog/wp-content/uploads/2019/11/Photos-new-icon.png" className="rounded-circle" width="42px" height="42px"></img>
@@ -13,22 +15,23 @@ function Contact(props) {
                     <div className="col-10 ">
                         <div className="row ">
                             <div id="name" className="col-8">
-                                FirstName+" "+lastName
+                                {props.contact.name}
                             </div>
                             <div className="col-4 text-end text-muted" style={{fontSize: 'small', textAlign: 'end'}}>
-                                Time
+                                {props.getTime(props.contact.lasttime)}
                             </div>
                         </div>
                         <div className ="row">
                             <div className="col-8 contact-last-msg text-muted" >
-                                LastMessage
+                                {props.contact.messages[props.contact.messages.length-1].message}
                             </div>
-                            <MessageCount/>
+                            {
+                                props.contact.received>0?<MessageCount count ={props.contact.received}/>:""
+                            }
                         </div>
                     </div>
                 </div>	
             </div>
-        </a>
    </>
   )
 }

@@ -12,7 +12,7 @@ function LoginPage(props) {
 			<div className="row">
 				<div className="col-sm-10 col-md-6" style={{ margin: "30px auto" }}>
 					<div className="p-4" style={{ backgroundColor: "rgba(225,225,225,0.4)" }}>
-						<form action="/register" method="post" onSubmit={(e) => {logmein(e)}}>
+						<form onSubmit={(e) => {logmein(e)}}>
 							<h1 className="display-1 m-2" style={{ textAlign: "center" }}>Login</h1>
 							<div className="form-group m-2 mt-4">
 								<input type="text" className="form-control" placeholder="username" required name="username"></input>

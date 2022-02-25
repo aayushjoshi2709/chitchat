@@ -1,3 +1,4 @@
+
 const express                = require('express'),
       app                    = express(),
       mongoose               = require('mongoose'),
@@ -7,6 +8,7 @@ const express                = require('express'),
       passportLocalMongoose  = require('passport-local-mongoose');
       methodOverride         = require('method-override');
       cors                   = require('cors');
+      path                  = require('path');
 require('dotenv/config')
 require('./')
 app.use(methodOverride('_method'));
@@ -15,9 +17,7 @@ app.use(cors({origin: "*"}))
 // set app to user body parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('../client/build/'));
-// adding public dir to the app
-app.use(express.static(__dirname + "/public"));
+
 // creating user model with mongoose
 mongoose.connect(process.env.databaseURL);
 const userSchema = mongoose.Schema({
@@ -147,7 +147,6 @@ passport.use(new localStrategy(User.authenticate()));
 
 // create message route
 app.post("/user/:id/message",function(req,res){
-    console.log(req.body.to);
     var message = {
         from: mongoose.Types.ObjectId(req.params.id),
         to: mongoose.Types.ObjectId(req.body.to),
@@ -259,7 +258,7 @@ app.get("/user/:id/message",function(req,res){
             // group all elements by person
             var result = groupByKey(user.messages,req.params.id);
             // sort all element by last time recieved
-            res.send(JSON.stringify(sortMessages(result)));
+            res.status(200).send(JSON.stringify(sortMessages(result)));
         }
     });
 });
@@ -287,6 +286,7 @@ app.get("/user/:id/friend",function(req,res){
         if(error) console.log(error);
         else{
             var friends = user.friends;
+            console.log(user.friends)
             res.send(JSON.stringify(friends));
         }
     });
@@ -330,7 +330,13 @@ app.post("/register",function(req,res){
             return res.send({status:"error"});
         }else {
             passport.authenticate('local')(req,res,function(){
-                res.status(200).send(req.user);
+                res.status(200).send({
+                    id:req.user.id,
+                    firstName:req.user.firstName,
+                    lastName:req.user.lastName,
+                    email:req.user.email,
+                    username:req.user.username
+                });
             });
         };
     });
@@ -348,7 +354,13 @@ app.post("/login",function(req,res,next){
             if (err) {
                 return next(err);
             }
-            res.status(200).send(req.user);
+            res.status(200).send({
+                                id:req.user.id,
+                                firstName:req.user.firstName,
+                                lastName:req.user.lastName,
+                                email:req.user.email,
+                                username:req.user.username
+                            });
         });
     })(req, res, next);
 })
@@ -358,11 +370,12 @@ app.get("/logout",function(req,res){
     req.logout();
     res.status(200).send("logged out");
 });
-
-app.get("/",function(req,res){
-    res.sendFile('../client/build/index.html');
-});
-
+if(process.env.type =='PRODUCTION'){
+    app.use(express.static('../client/build/'));
+    app.get("*",function(req,res){
+        res.sendFile(path.join(__dirname+'/../client/build/index.html'));
+    });
+}
 // check if the user is logged in or not
 function isLoggedIn(req,res,next){
     if(req.isAuthenticated()){

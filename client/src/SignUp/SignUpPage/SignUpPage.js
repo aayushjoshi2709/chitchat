@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 const SignUpPage = (props) => {
 	let navigate = useNavigate();
 	function signmeup(e){
-		if(props.login(e)){
+		if(props.signUp(e)){
 			navigate('/messaging');
 		}
 	}
@@ -13,7 +13,7 @@ const SignUpPage = (props) => {
 			<div className="row">
 				<div className="col-sm-10 col-md-6" style={{ margin: "30px auto" }}>
 					<div className="p-4" style={{ backgroundColor: "rgba(225,225,225,0.4)" }}>
-						<form action="/register" method="post" onSubmit={(e) => { signmeup(e) }}>
+						<form onSubmit={(e) => { signmeup(e) }}>
 							<h1 className="display-1 m-2" style={{ textAlign: "center" }}>Sign Up</h1>
 							<div className="form-group m-2 mt-4">
 								<input type="text" className="form-control" placeholder="First Name" required name="firstName"></input>

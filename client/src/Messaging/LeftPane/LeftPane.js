@@ -10,7 +10,7 @@ const LeftPane = (props)=>{
             <div className="panels col-md-4 m-0 p-0" >
 				<Header/>
 				<SearchFriend/>
-                <Contacts setIsRightOn = {props.setIsRightOn}/>
+                <Contacts getTime={props.getTime} messages={props.messages} loadMessages={props.loadMessages} />
 			</div>
         </>
     )

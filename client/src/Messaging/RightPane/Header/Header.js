@@ -1,6 +1,6 @@
 import React from 'react';
 import '../../Styles/messaging.css'
-const Header = () =>{
+const Header = (props) =>{
     return(
         <div id="right-pane-div" className="card p-2 header">
             <div className="row">
@@ -13,7 +13,7 @@ const Header = () =>{
                 </div>
                 <div className="col-9 ms-2 py-0" style={{color: 'white'}}>
                     <div style={{fontSize: 'small', fontWeight: 'bold'}} id="friend-name">
-                        
+                        {props.name}
                     </div>
                     <div style={{fontSize:'small'}}>
                         Online
