@@ -9,7 +9,7 @@ const express                = require('express'),
       multer                 = require('multer');
 app.use(methodOverride('_method'));
 app.set("view engine","ejs");
-
+require('dotenv').config()
 // configuring multer for file upload
 
 const storage = multer.diskStorage({
