@@ -1,24 +1,6 @@
-html{
-    height: 100%;
-}
-body{
-    height: 100%;
-}
-#messages-top-container{
-    padding: 2rem;
-    min-height: 100vh;
-    background-color: #121b20;
-}
-@media only screen and (max-width: 800px) {
-    #messages-top-container {
-      padding: inherit;
-    }
-    #main-container,.panels,.sub-container{
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }    
 
+
+@media only screen and (max-width: 800px) {
     #contacts{
         flex-grow: 1;
     }
@@ -26,16 +8,9 @@ body{
         flex-grow: 1;
     }    
 }
-a{
-    text-decoration: none;
-}
+
 .header{
     background-color: #3949AB;
-}
-#main-container{
-    background-color: #BBF68c;
-    min-height: 90vh;
-    z-index: 1;
 }
 #contacts{
     overflow-y: scroll;
@@ -109,23 +84,3 @@ col{
 .footer-sent button{
     margin-left: 10px;
 }
-
-/* width */
-::-webkit-scrollbar {
-    width: 10px;
-  }
-  
-  /* Track */
-  ::-webkit-scrollbar-track {
-    background: #f1f1f1; 
-  }
-   
-  /* Handle */
-  ::-webkit-scrollbar-thumb {
-    background: #888; 
-  }
-  
-  /* Handle on hover */
-  ::-webkit-scrollbar-thumb:hover {
-    background: #555; 
-  }

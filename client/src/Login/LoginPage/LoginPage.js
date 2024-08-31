@@ -9,20 +9,23 @@ function LoginPage(props) {
   }
   return (
     <div
-      className="container d-flex justify-content-center align-items-center"
+      className="container d-flex justify-content-center align-items-center rounded"
       style={{ flex: 1 }}
     >
       <div className="col-sm-10 col-md-6" style={{ margin: "30px auto" }}>
         <div
-          className="p-4"
-          style={{ backgroundColor: "rgba(225,225,225,0.4)" }}
+          className="p-4 card"
+          style={{ backgroundColor: "rgba(225,225,225,0.6)" }}
         >
           <form
             onSubmit={(e) => {
               logmein(e);
             }}
           >
-            <h1 className="display-1 m-2" style={{ textAlign: "center" }}>
+            <h1
+              className="display-1 m-2"
+              style={{ textAlign: "center", fontWeight: "bolder" }}
+            >
               Login
             </h1>
             <div className="form-group m-2 mt-4">
@@ -43,6 +46,7 @@ function LoginPage(props) {
                 name="password"
               ></input>
             </div>
+            <hr />
             <div className="text-center">
               <button
                 type="submit"

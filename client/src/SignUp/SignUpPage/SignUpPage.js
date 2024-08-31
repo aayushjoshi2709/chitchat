@@ -15,15 +15,18 @@ const SignUpPage = (props) => {
     >
       <div className="col-sm-10 col-md-6" style={{ margin: "30px auto" }}>
         <div
-          className="p-4"
-          style={{ backgroundColor: "rgba(225,225,225,0.4)" }}
+          className="p-4 card rounded"
+          style={{ backgroundColor: "rgba(225,225,225,0.6)" }}
         >
           <form
             onSubmit={(e) => {
               signmeup(e);
             }}
           >
-            <h1 className="display-1 m-2" style={{ textAlign: "center" }}>
+            <h1
+              className="display-1 m-2"
+              style={{ textAlign: "center", fontWeight: "bolder" }}
+            >
               Sign Up
             </h1>
             <div className="form-group m-2 mt-4">
@@ -79,6 +82,7 @@ const SignUpPage = (props) => {
                 required
               ></input>
             </div>
+            <hr />
             <div className="text-center">
               <button
                 type="submit"
