@@ -1,3 +1,6 @@
 /* files to be ignored by github*/
-package-lock.json
-node_modules
+./package-lock.json
+./node_modules
+client/build
+**/package-lock.json
+**/node_modules
