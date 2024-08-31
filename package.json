@@ -1,0 +1,26 @@
+{
+  "name": "chit-chat",
+  "version": "1.0.0",
+  "description": "A web messaging app",
+  "main": "index.js",
+  "scripts": {
+    "client": "cd client && npm start",
+    "server": "cd server && npm start",
+    "start": "cd client && npm i && npm run build && cd .. && cd server && npm i && npm start",
+    "dev":"concurrently \"npm run server\" \"npm run client\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaayush27/chitchat.git"
+  },
+  "author": "Aayush Joshi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jaayush27/chitchat/issues"
+  },
+  "homepage": "https://github.com/jaayush27/chitchat#readme",
+  "dependencies": {
+    "concurrently": "^7.0.0"
+  }
+}
