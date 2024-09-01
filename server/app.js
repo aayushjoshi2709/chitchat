@@ -1,3 +1,5 @@
+const { EstablishSocket, afterConnect } = require("./sockets/socket");
+
 const express = require("express"),
   app = express(),
   mongoose = require("mongoose"),
@@ -8,7 +10,9 @@ const express = require("express"),
   User = require("./models/User/User"),
   Message = require("./models/Messages/Messages"),
   userRouter = require("./routes/User/User"),
-  authRouter = require("./routes/Auth/Auth");
+  authRouter = require("./routes/Auth/Auth"),
+  logger = require("./logger/logger");
+
 app.use(methodOverride("_method"));
 require("dotenv").config();
 
@@ -18,95 +22,23 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // adding public dir to the app
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static("uploads"));
+
+// added the winston logger to the request object
+app.use((req, res, net) => {
+  req.logger = logger;
+  net();
+});
 // creating user model with mongoose
 mongoose.connect(process.env.databaseURL);
 
 // configuring socket.io
 const http = require("http").Server(app);
-const io = require("socket.io")(http, {
-  cors: {
-    origin: "http://" + process.env.IP + ":" + process.env.PORT,
-    methods: ["GET", "POST"],
-    transports: ["websocket", "polling"],
-    credentials: true,
-  },
-  allowEIO3: true,
-});
+socketObj = EstablishSocket(http);
+afterConnect(socketObj);
 
 http.listen(process.env.PORT, function () {
+  logger.info("App started in port: " + process.env.PORT);
   console.log("App started");
-});
-// store socket id for a user on connection
-io.on("connection", (socket) => {
-  socket.on("user", function (data) {
-    User.findByIdAndUpdate(
-      data,
-      { socketid: socket.id },
-      function (error, user) {
-        if (error) {
-          console.log("error in updation socket id");
-        }
-      }
-    );
-  });
-  socket.on("new_message", function (message) {
-    User.findById(message.to, function (error, user) {
-      if (user.socketid !== "NULL") {
-        io.to(user.socketid).emit("new_message", message);
-      }
-    });
-  });
-  socket.on("update_message_status_received", function (id) {
-    Message.findByIdAndUpdate(
-      id,
-      { status: "received" },
-      function (error, message) {
-        if (error) {
-          console.log("cannot update status");
-        }
-        User.findById(message.from, function (error, user) {
-          if (user.socketid !== "NULL")
-            io.to(user.socketid).emit("update_message_status_received", id);
-        });
-      }
-    );
-  });
-  socket.on("add_friend", function (id) {
-    User.findById(id, function (error, user) {
-      if (error) console.log(error);
-      else {
-        if (user.socketid !== "NULL") {
-          io.to(user.socketid).emit("add_friend", id);
-        }
-      }
-    });
-  });
-  socket.on("update_message_status_seen", function (id) {
-    Message.findByIdAndUpdate(
-      id,
-      { status: "seen" },
-      function (error, message) {
-        if (error) {
-          console.log("cannot update status");
-        }
-        User.findById(message.from, function (error, user) {
-          if (user.socketid !== "NULL")
-            io.to(user.socketid).emit("update_message_status_seen", id);
-        });
-      }
-    );
-  });
-  socket.on("disconnect", function () {
-    User.findOneAndUpdate(
-      { socketid: socket.id },
-      { socketid: "NULL" },
-      function (error, user) {
-        if (error) {
-          console.log("error in removing socket id");
-        }
-      }
-    );
-  });
 });
 // passport configuration
 
