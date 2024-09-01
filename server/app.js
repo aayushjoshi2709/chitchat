@@ -5,12 +5,13 @@ const express = require("express"),
   mongoose = require("mongoose"),
   bodyParser = require("body-parser"),
   passport = require("passport"),
-  localStrategy = require("passport-local"),
   methodOverride = require("method-override"),
-  User = require("./models/User/User"),
-  userRouter = require("./routes/User/User"),
-  authRouter = require("./routes/Auth/Auth"),
-  logger = require("./logger/logger");
+  userRouter = require("./routes/User/User.route"),
+  authRouter = require("./routes/Auth/Auth.route"),
+  logger = require("./logger/logger"),
+  jwtStratery = require("./middlewares/passport.middleware"),
+  isAuthenticated = require("./middlewares/isAuthenticated.middleware"),
+  MessagesRouter = require("./routes/Messages/Messages.route");
 
 app.use(methodOverride("_method"));
 require("dotenv").config();
@@ -34,18 +35,8 @@ http.listen(process.env.PORT, function () {
 });
 
 // passport configuration
-app.use(
-  require("cookie-session")({
-    secret: process.env.SECRET_KEY,
-    resave: false,
-    saveUninitialized: false,
-  })
-);
+passport.use(jwtStratery);
 app.use(passport.initialize());
-app.use(passport.session());
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
-passport.use(new localStrategy(User.authenticate()));
 
 // added the winston logger to the request object
 app.use((req, res, next) => {
@@ -55,3 +46,4 @@ app.use((req, res, next) => {
 });
 app.use("/user", userRouter);
 app.use("/auth", authRouter);
+app.use("/messages", isAuthenticated, MessagesRouter);

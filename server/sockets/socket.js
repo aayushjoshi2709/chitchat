@@ -1,6 +1,6 @@
 const socket = require("socket.io");
-const User = require("../models/User/User");
-const Message = require("../models/Messages/Messages");
+const User = require("../models/User/User.model");
+const Message = require("../models/Messages/Messages.model");
 // store socket id for a user on connection
 function EstablishSocket(http) {
   return socket(http, {
