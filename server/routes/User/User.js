@@ -5,6 +5,8 @@ const isAuthenticated = require("../../middlewares/isAuthenticated");
 const userRouter = require("express").Router();
 // group messages by sender id and remove extra info
 function groupByKey(array, given_id) {
+  const logger = req.logger;
+  logger.info("Grouping messages by sender id: ", given_id);
   var res = {};
   array.forEach((ele) => {
     var msg = {
