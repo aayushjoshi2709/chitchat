@@ -1,6 +1,7 @@
 const socket = require("socket.io");
 const User = require("../models/User/User.model");
 const Message = require("../models/Messages/Messages.model");
+require("dotenv").config();
 // store socket id for a user on connection
 function EstablishSocket(http) {
   return socket(http, {
