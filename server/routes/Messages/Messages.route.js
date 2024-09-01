@@ -3,9 +3,8 @@ const { StatusCodes } = require("http-status-codes");
 const isAuthenticated = require("../../middlewares/isAuthenticated.middleware");
 const User = require("../../models/User/User.model");
 const Message = require("../../models/Messages/Messages.model");
-const mongoose = require("mongoose");
-const MessageDto = require("../../dtos/Message.dto"); 
-
+const MessageDto = require("../../dtos/Message.dto");
+const dtoValidator = require("../../middlewares/dtoValidator.middleware");
 
 // group messages by sender id and remove extra info
 function groupByKey(array, given_id) {
@@ -90,47 +89,51 @@ MessagesRouter.get("/", async (req, res) => {
 });
 
 // create message route
-MessagesRouter.post("/", isAuthenticated, async (req, res) => {
-  const logger = req.logger;
-  logger.info("Going to create a new message");
-  var message = {
-    from: mongoose.Types.ObjectId(req.user._id),
-    time: req.body.time || Date.now(),
-    status: "sent",
-    message: req.body.message,
-  };
-  logger.debug("Message: ", message);
-  User.findById({ username: req.body.to })
-    .then((user) => {
-      if (!user) {
-        return res
+MessagesRouter.post(
+  "/",
+  [isAuthenticated, dtoValidator(MessageDto, "body")],
+  async (req, res) => {
+    const logger = req.logger;
+    logger.info("Going to create a new message");
+    var message = {
+      from: req.user._id,
+      time: req.body.time || Date.now(),
+      status: "sent",
+      message: req.body.message,
+    };
+    logger.debug("Message: ", message);
+    User.findById({ username: req.body.to })
+      .then((user) => {
+        if (!user) {
+          return res
+            .send(
+              JSON.stringify({
+                error: "Destination user not found",
+              })
+            )
+            .status(StatusCodes.BAD_REQUEST);
+        }
+        message.to = user._id;
+        Message.create(message).then((message) => {
+          const fromUser = req.user;
+          user.messages = [...user.messages, message._id];
+          user.save();
+          fromUser.messages = [...fromUser.messages, message._id];
+          fromUser.save();
+          res.send(JSON.stringify({ status: "success", id: message._id }));
+        });
+      })
+      .catch((error) => {
+        logger.error("Error in finding destination user: ", error);
+        res
           .send(
             JSON.stringify({
-              error: "Destination user not found",
+              error: "Error finding destination user",
             })
           )
-          .status(StatusCodes.BAD_REQUEST);
-      }
-      message.to = user._id;
-      Message.create(message).then((message) => {
-        const fromUser = req.user;
-        user.messages = [...user.messages, message._id];
-        user.save();
-        fromUser.messages = [...fromUser.messages, message._id];
-        fromUser.save();
-        res.send(JSON.stringify({ status: "success", id: message._id }));
+          .status(StatusCodes.INTERNAL_SERVER_ERROR);
       });
-    })
-    .catch((error) => {
-      logger.error("Error in finding destination user: ", error);
-      res
-        .send(
-          JSON.stringify({
-            error: "Error finding destination user",
-          })
-        )
-        .status(StatusCodes.INTERNAL_SERVER_ERROR);
-    });
-});
+  }
+);
 
 module.exports = MessagesRouter;

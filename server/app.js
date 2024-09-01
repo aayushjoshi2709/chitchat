@@ -1,5 +1,3 @@
-const { EstablishSocket, afterConnect } = require("./sockets/socket");
-
 const express = require("express"),
   app = express(),
   mongoose = require("mongoose"),
@@ -11,7 +9,9 @@ const express = require("express"),
   logger = require("./logger/logger"),
   jwtStratery = require("./middlewares/passport.middleware"),
   isAuthenticated = require("./middlewares/isAuthenticated.middleware"),
-  MessagesRouter = require("./routes/Messages/Messages.route");
+  MessagesRouter = require("./routes/Messages/Messages.route"),
+  FriendRouter = require("./routes/Friend/Friend.route"),
+  { EstablishSocket, afterConnect } = require("./sockets/socket");
 
 app.use(methodOverride("_method"));
 require("dotenv").config();
@@ -23,6 +23,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static("uploads"));
 // creating user model with mongoose
+mongoose.set("strictQuery", false);
 mongoose.connect(process.env.databaseURL);
 
 // configuring socket.io
@@ -47,3 +48,4 @@ app.use((req, res, next) => {
 app.use("/user", userRouter);
 app.use("/auth", authRouter);
 app.use("/messages", isAuthenticated, MessagesRouter);
+app.use("/friends", isAuthenticated, FriendRouter);
