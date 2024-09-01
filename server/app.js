@@ -20,7 +20,6 @@ require("dotenv").config();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 // adding public dir to the app
-app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static("uploads"));
 // creating user model with mongoose
 mongoose.set("strictQuery", false);

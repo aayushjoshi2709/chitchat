@@ -4,7 +4,7 @@ const multerUpload = require("../../middlewares/multer.middleware");
 const { StatusCodes } = require("http-status-codes");
 const isAuthenticated = require("../../middlewares/isAuthenticated.middleware");
 
-userRouter.get("/", async (req, res) => {
+userRouter.get("/", isAuthenticated, async (req, res) => {
   const user = req.user;
   delete user.password;
   delete user.id;
