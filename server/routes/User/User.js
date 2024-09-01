@@ -120,10 +120,16 @@ userRouter.get(
 );
 // delete friend
 userRouter.delete("/:id/friend/", isAuthenticated, function (req, res) {
+  logger.info("Going to delete a friend: " + req.params.id);
   User.findById(req.params.id, function (error, user) {
-    if (error) console.log(error);
+    if (error) {
+      logger.error("Error in finding user: ", JSON.stringify(error));
+      res.send(JSON.stringify({ status: "error", error: error })).status(500);
+    }
+    logger.debug("Found the friend: ", JSON.stringify(user));
     user.friends.remove(req.body.id);
     user.save();
+    
     User.findById(req.body.id, function (error, xfriend) {
       if (error) console.log(error);
       xfriend.friends.remove(req.params.id);
@@ -135,6 +141,8 @@ userRouter.delete("/:id/friend/", isAuthenticated, function (req, res) {
 
 // create message route
 userRouter.post("/:id/message", isAuthenticated, function (req, res) {
+  const logger = req.logger;
+  logger.info("Going to create a new message");
   var message = {
     from: mongoose.Types.ObjectId(req.params.id),
     to: mongoose.Types.ObjectId(req.body.to),
@@ -142,15 +150,29 @@ userRouter.post("/:id/message", isAuthenticated, function (req, res) {
     status: "sent",
     message: req.body.message,
   };
+  logger.debug("Message: ", JSON.stringify(message));
   User.findById(message.to, function (error, toUser) {
-    if (error) console.log("To user not found");
+    if (error) {
+      logger.error(
+        "Error in finding destination user: ",
+        JSON.stringify(error)
+      );
+      res.send(JSON.stringify({ status: "error", error: error })).status(500);
+    }
     Message.create(message, function (error, message) {
       if (error) {
-        console.log(error);
+        logger.error("Error in creating message: ", JSON.stringify(error));
+        res.send(JSON.stringify({ status: "error", error: error })).status(500);
       } else {
         User.findById(message.from, function (error, fromUser) {
           if (error) {
-            console.log(error);
+            logger.error(
+              "Error in finding source user: ",
+              JSON.stringify(error)
+            );
+            res
+              .send(JSON.stringify({ status: "error", error: error }))
+              .status(500);
           }
           if ("messages" in toUser) toUser.messages.push(message._id);
           else {
@@ -164,7 +186,6 @@ userRouter.post("/:id/message", isAuthenticated, function (req, res) {
             fromUser.messages = [];
             fromUser.messages.push(message._id);
           }
-
           fromUser.save();
           res.send(JSON.stringify({ status: "success", id: message._id }));
         });
