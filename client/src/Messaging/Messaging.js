@@ -31,9 +31,11 @@ const Messaging = (props) => {
       <div className={styles.topContainer}>
         <div className={styles.mainContainer}>
           <LPane
+            user={props.user}
             messages={props.messages}
             getTime={getTime}
             loadMessages={loadMessages}
+            friends={props.friends}
           />
           {isRightOn ? (
             <RPane

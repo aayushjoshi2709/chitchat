@@ -9,9 +9,10 @@ const LeftPane = (props) => {
   return (
     <>
       <div className={styles.leftPane}>
-        <Header />
+        <Header user={props.user} />
         <SearchFriend />
         <Contacts
+          friends={props.friends}
           getTime={props.getTime}
           messages={props.messages}
           loadMessages={props.loadMessages}

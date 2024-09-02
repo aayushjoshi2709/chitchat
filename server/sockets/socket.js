@@ -31,7 +31,7 @@ function afterConnect(socketObj) {
     socket.on("new_message", function (message) {
       User.findById(message.to, function (error, user) {
         if (user.socketid !== "NULL") {
-          io.to(user.socketid).emit("new_message", message);
+          socketObj.to(user.socketid).emit("new_message", message);
         }
       });
     });
@@ -45,7 +45,9 @@ function afterConnect(socketObj) {
           }
           User.findById(message.from, function (error, user) {
             if (user.socketid !== "NULL")
-              io.to(user.socketid).emit("update_message_status_received", id);
+              socketObj
+                .to(user.socketid)
+                .emit("update_message_status_received", id);
           });
         }
       );
@@ -55,7 +57,7 @@ function afterConnect(socketObj) {
         if (error) console.log(error);
         else {
           if (user.socketid !== "NULL") {
-            io.to(user.socketid).emit("add_friend", id);
+            socketObj.to(user.socketid).emit("add_friend", id);
           }
         }
       });
@@ -70,7 +72,9 @@ function afterConnect(socketObj) {
           }
           User.findById(message.from, function (error, user) {
             if (user.socketid !== "NULL")
-              io.to(user.socketid).emit("update_message_status_seen", id);
+              socketObj
+                .to(user.socketid)
+                .emit("update_message_status_seen", id);
           });
         }
       );

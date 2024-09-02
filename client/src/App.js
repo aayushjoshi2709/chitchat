@@ -3,7 +3,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useNavigate,
+  redirect,
 } from "react-router-dom";
 import Main from "./Main/Main";
 import SignUp from "./SignUp/SignUp";
@@ -14,70 +14,110 @@ import About from "./About/About";
 import io from "socket.io-client";
 import "./App.css";
 const App = () => {
-  var socket = io.connect();
-
+  const socket = io.connect();
+  axios.defaults.baseURL = "http://localhost:5000";
   // disconnect socket when when window/browser/site is closed
   window.addEventListener("onbeforeunload", function (e) {
     socket.disconnect();
   });
-
   // states to store data for the user
   const [user, setUser] = useState(null);
   const [friends, setFriends] = useState({});
   const [messages, setMessages] = useState({});
   const [JWTToken, setJWTToken] = useState("");
 
+  axios.interceptors.response.use(
+    (response) => {
+      console.log("here");
+      return response;
+    },
+    (error) => {
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem("token");
+        setJWTToken("");
+        redirect("/login");
+      }
+      return Promise.reject(error);
+    }
+  );
+
   // get messages function
   const getMessages = async () => {
-    await axios.get(`/user/${user.id}/message`).then(function (response) {
-      if (response.status == 200) {
-        setMessages(response.data);
-      }
-    });
+    await axios
+      .get("/messages", {
+        headers: {
+          Authorization: `Bearer ${JWTToken}`,
+        },
+      })
+      .then(function (response) {
+        if (response.status == 200) {
+          setMessages(response.data);
+        }
+      });
   };
   // const get friends
   const getFriends = async () => {
     await axios
-      .get(
-        `/friends`,
-        (Headers = {
+      .get(`/friends`, {
+        headers: {
           Authorization: `Bearer ${JWTToken}`,
-        })
-      )
+        },
+      })
       .then(function (response) {
         if (response.status == 200) {
-          setFriends(response.data);
+          const friendMap = new Map();
+          response.data.forEach((friend) => {
+            friendMap[friend.username] = friend;
+          });
+          setFriends(friendMap);
         }
       });
   };
-  useEffect(() => {
-    if (user != undefined) {
+
+  // get user function
+  const getUser = async () => {
+    await axios
+      .get(`/user`, {
+        headers: {
+          Authorization: `Bearer ${JWTToken}`,
+        },
+      })
+      .then((response) => {
+        if (response.status == 200) {
+          setUser(response.data);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+  useEffect(async () => {
+    console.log(JWTToken);
+    if (JWTToken != "") {
+      await getUser();
+      await getFriends();
+      await getMessages();
       socket.on("connect", function () {
         // Send emit user id right after connect
-        socket.emit("user", user.id);
+        socket.emit("user", user._id);
       });
-      getMessages();
-      getFriends();
     }
-  }, [user]);
+  }, [JWTToken]);
 
-  useEffect(() => {
-    if (friends.length != 0) console.table(friends);
-  }, [friends]);
   // login to the app
   const login = async (event) => {
     event.preventDefault();
     let uname = event.target[0].value;
     let pass = event.target[1].value;
     await axios
-      .post("/login", {
+      .post("/auth/login", {
         username: uname,
         password: pass,
       })
       .then(function (response) {
         if (response.status == 200) {
-          setUser(response.data);
-          console.log(response.data);
+          setJWTToken(response.data.token);
+          localStorage.setItem("token", response.data.token);
           return true;
         }
       })
@@ -90,13 +130,13 @@ const App = () => {
   // sign up function
   const signUp = async (event) => {
     event.preventDefault();
-    var fname = event.target[0].value;
-    var lname = event.target[1].value;
-    var email = event.target[2].value;
-    var username = event.target[3].value;
-    var pass = event.target[4].value;
+    const fname = event.target[0].value;
+    const lname = event.target[1].value;
+    const email = event.target[2].value;
+    const username = event.target[3].value;
+    const pass = event.target[4].value;
     await axios
-      .post("/register", {
+      .post("/auth/register", {
         firstName: fname,
         lastName: lname,
         email: email,
@@ -105,8 +145,8 @@ const App = () => {
       })
       .then(function (response) {
         if (response.status == 200 && response.data !== undefined) {
-          setUser(response.data);
-          getMessages();
+          setJWTToken(response.data.token);
+          localStorage.setItem("token", response.data.token);
           return true;
         }
       })
@@ -115,22 +155,31 @@ const App = () => {
       });
     return false;
   };
+
   // logout function
   const logOut = async function () {
+    localStorage.removeItem("token");
     setJWTToken("");
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setJWTToken(token);
+    }
+  }, []);
 
   // check for recived messages
   function checkRecieved() {
     for (let key in messages) {
-      var count = 0;
-      messages[key].messages.forEach(function (message) {
+      let count = 0;
+      messages[key].forEach(function (message) {
         if (
           message.status &&
           message.status != "seen" &&
-          message.to == user.id
+          message.to.username == user.username
         ) {
-          socket.emit("update_message_status_received", message.id);
+          socket.emit("update_message_status_received", message._id);
           message.status = "received";
           count++;
         }
@@ -151,7 +200,12 @@ const App = () => {
           exact
           path="/messaging"
           element={
-            <Messaging messages={messages} user={user} socket={socket} />
+            <Messaging
+              messages={messages}
+              friends={friends}
+              user={user}
+              socket={socket}
+            />
           }
         />
         <Route exact path="/register" element={<SignUp signUp={signUp} />} />

@@ -15,7 +15,7 @@ MessagesRouter.get("/", async (req, res) => {
   Message.find({
     $or: [{ from: req.user._id }, { to: req.user._id }],
   })
-    .select("from to message time status -_id")
+    .select("from to message time status")
     .populate({
       path: "from",
       select: selectOptions,
@@ -31,7 +31,7 @@ MessagesRouter.get("/", async (req, res) => {
       logger.info("Got the messages: " + messages);
       const response = {};
       messages.map((message) => {
-        if (message.from._id != req.user._id) {
+        if (message.from._id == req.user._id) {
           response[message.to.username] = response[message.to.username] || [];
           response[message.to.username].push(message);
           return;
@@ -69,7 +69,7 @@ MessagesRouter.get("/:username", async (req, res) => {
         .limit(limit)
         .populate("from", "username -_id")
         .populate("to", "username -_id")
-        .select("from to message time status -_id")
+        .select("from to message time status")
         .sort({ time: 1 })
         .then((messages) => {
           logger.info("Got the user messages: " + messages);

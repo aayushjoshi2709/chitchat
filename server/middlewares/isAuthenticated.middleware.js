@@ -6,9 +6,9 @@ const isAuthenticated = async (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
   const logger = req.logger;
   if (!token) {
-    const err = new Error("Invalid token");
-    err.status = 401;
-    next(err);
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .send({ message: "Invalid token" });
   }
   await jwt.verify(token, process.env.JWT_SECRET, async (error, decoded) => {
     if (error) {

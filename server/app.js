@@ -11,11 +11,17 @@ const express = require("express"),
   isAuthenticated = require("./middlewares/isAuthenticated.middleware"),
   MessagesRouter = require("./routes/Messages/Messages.route"),
   FriendRouter = require("./routes/Friend/Friend.route"),
-  { EstablishSocket, afterConnect } = require("./sockets/socket");
-
+  { EstablishSocket, afterConnect } = require("./sockets/socket"),
+  cors = require("cors");
 app.use(methodOverride("_method"));
 require("dotenv").config();
 
+// set app to use cors
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  })
+);
 // set app to user body parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

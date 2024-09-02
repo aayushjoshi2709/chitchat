@@ -5,8 +5,6 @@ import Messages from "./Messages/Messages";
 import "../Styles/messaging.css";
 import styles from "./rightPane.module.css";
 const RightPane = (props) => {
-  console.log(props.userid);
-  console.log(props.messageData);
   return (
     <div className={styles.rightPane}>
       <Header name={props.messageData.name} />
