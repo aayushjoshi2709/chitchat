@@ -7,13 +7,14 @@ function Contact(props) {
     <div
       className={style.contact}
       onClick={() => {
-        props.loadMessages(props.id);
+        props.loadMessages(props.contact.username);
       }}
     >
       <img
         src={
-          props.contact.image ||
-          "https://winaero.com/blog/wp-content/uploads/2019/11/Photos-new-icon.png"
+          props.contact && props.contact.image
+            ? props.contact.image
+            : process.env.PUBLIC_URL + "/assets/avatar.png"
         }
         className={style.avatar}
       />

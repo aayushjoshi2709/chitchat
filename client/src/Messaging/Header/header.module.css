@@ -1,0 +1,27 @@
+.avatar{
+    height: 42px;
+    width: 42px;
+    margin-right: 1rem;
+    border-radius: 50%;
+}
+.header{
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+    background-color: #3949AB;
+    align-items: center;
+}
+.details{
+    display: flex;
+    flex-direction: column;
+}
+.details p{
+    margin: 0;
+    padding: 0;
+    color: white;
+}
+.details small{
+    margin: 0;
+    padding: 0;
+    color: white;
+}

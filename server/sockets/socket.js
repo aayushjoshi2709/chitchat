@@ -8,7 +8,7 @@ function EstablishSocket(http) {
     cors: {
       origin: "http://" + process.env.IP + ":" + process.env.PORT,
       methods: ["GET", "POST"],
-      transports: ["websocket", "polling"],
+      transports: ["websocket"],
       credentials: true,
     },
     allowEIO3: true,

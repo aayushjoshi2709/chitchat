@@ -17,7 +17,7 @@ const LeftPane = (props) => {
             src={
               props.user && props.user.image
                 ? props.user.image
-                : "https://winaero.com/blog/wp-content/uploads/2019/11/Photos-new-icon.png"
+                : process.env.PUBLIC_URL + "/assets/avatar.png"
             }
           />
         </div>

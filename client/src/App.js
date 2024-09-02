@@ -14,7 +14,11 @@ import About from "./About/About";
 import io from "socket.io-client";
 import "./App.css";
 const App = () => {
-  const socket = io.connect();
+  const socket = io.connect({
+    transports: ["websocket"],
+    reconnection: true,
+    reconnectionDelay: 1000,
+  });
   axios.defaults.baseURL = "http://localhost:5000";
   // disconnect socket when when window/browser/site is closed
   window.addEventListener("onbeforeunload", function (e) {
@@ -28,7 +32,6 @@ const App = () => {
 
   axios.interceptors.response.use(
     (response) => {
-      console.log("here");
       return response;
     },
     (error) => {
@@ -50,7 +53,7 @@ const App = () => {
         },
       })
       .then(function (response) {
-        if (response.status == 200) {
+        if (response.status === 200) {
           setMessages(response.data);
         }
       });
@@ -64,8 +67,8 @@ const App = () => {
         },
       })
       .then(function (response) {
-        if (response.status == 200) {
-          const friendMap = new Map();
+        if (response.status === 200) {
+          const friendMap = {};
           response.data.forEach((friend) => {
             friendMap[friend.username] = friend;
           });
@@ -83,7 +86,7 @@ const App = () => {
         },
       })
       .then((response) => {
-        if (response.status == 200) {
+        if (response.status === 200) {
           setUser(response.data);
         }
       })
@@ -92,14 +95,13 @@ const App = () => {
       });
   };
   useEffect(async () => {
-    console.log(JWTToken);
-    if (JWTToken != "") {
+    if (JWTToken !== "") {
       await getUser();
       await getFriends();
       await getMessages();
       socket.on("connect", function () {
         // Send emit user id right after connect
-        socket.emit("user", user._id);
+        socket.emit("user", JWTToken);
       });
     }
   }, [JWTToken]);
@@ -109,13 +111,13 @@ const App = () => {
     event.preventDefault();
     let uname = event.target[0].value;
     let pass = event.target[1].value;
-    await axios
+    axios
       .post("/auth/login", {
         username: uname,
         password: pass,
       })
       .then(function (response) {
-        if (response.status == 200) {
+        if (response.status === 200) {
           setJWTToken(response.data.token);
           localStorage.setItem("token", response.data.token);
           return true;
@@ -135,7 +137,7 @@ const App = () => {
     const email = event.target[2].value;
     const username = event.target[3].value;
     const pass = event.target[4].value;
-    await axios
+    axios
       .post("/auth/register", {
         firstName: fname,
         lastName: lname,
@@ -144,7 +146,7 @@ const App = () => {
         password: pass,
       })
       .then(function (response) {
-        if (response.status == 200 && response.data !== undefined) {
+        if (response.status === 200 && response.data !== undefined) {
           setJWTToken(response.data.token);
           localStorage.setItem("token", response.data.token);
           return true;
@@ -163,11 +165,13 @@ const App = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      setJWTToken(token);
+    if (JWTToken === "") {
+      const token = localStorage.getItem("token");
+      if (token) {
+        setJWTToken(token);
+      }
     }
-  }, []);
+  });
 
   // check for recived messages
   function checkRecieved() {
@@ -176,8 +180,8 @@ const App = () => {
       messages[key].forEach(function (message) {
         if (
           message.status &&
-          message.status != "seen" &&
-          message.to.username == user.username
+          message.status !== "seen" &&
+          message.to.username === user.username
         ) {
           socket.emit("update_message_status_received", message._id);
           message.status = "received";
@@ -212,7 +216,7 @@ const App = () => {
         <Route
           exact
           path="/about"
-          element={<About user={user} logOut={logOut} />}
+          element={<About friends={friends} user={user} logOut={logOut} />}
         />
       </Routes>
     </Router>

@@ -6,7 +6,7 @@ import "./Styles/messaging.css";
 import styles from "./messaging.module.css";
 const Messaging = (props) => {
   const [isRightOn, setIsRightOn] = useState(false);
-  const [messageData, setMessageData] = useState({});
+  const [friendusername, setFriendUserName] = useState("");
   function getTime(str) {
     let today = new Date(str);
     let hour =
@@ -16,15 +16,15 @@ const Messaging = (props) => {
     let time = hour + ":" + minute;
     return time;
   }
-  function loadMessages(id) {
-    setMessageData(props.messages[id]);
+  function loadMessages(friendUsername) {
+    setFriendUserName(friendUsername);
     setIsRightOn(true);
   }
   useEffect(() => {
-    if (messageData.length > 0) {
+    if (friendusername.length > 0) {
       setIsRightOn(true);
     }
-  }, [messageData]);
+  }, [friendusername]);
 
   return (
     <>
@@ -39,8 +39,9 @@ const Messaging = (props) => {
           />
           {isRightOn ? (
             <RPane
-              userid={props.user.id}
-              messageData={messageData}
+              user={props.user}
+              friend={props.friends[friendusername]}
+              messageData={props.messages[friendusername]}
               getTime={getTime}
               socket={props.socket}
             />

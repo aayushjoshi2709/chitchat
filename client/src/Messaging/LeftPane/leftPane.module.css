@@ -1,7 +1,7 @@
-.leftPane{
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    flex:1;
-    min-width: 250px;
-  }
+.leftPane{  
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+  min-width: 250px;
+  flex: 1;
+}
