@@ -3,6 +3,7 @@ const AuthRouter = require("express").Router();
 const bcrypt = require("bcrypt");
 const { StatusCodes } = require("http-status-codes");
 const UserDto = require("../../dtos/User.dto");
+const LoginDto = require("../../dtos/Login.dto");
 const jwt = require("jsonwebtoken");
 const dtoValidator = require("../../middlewares/dtoValidator.middleware");
 async function hashPassword(password) {
@@ -35,29 +36,42 @@ AuthRouter.post(
       password: await hashPassword(req.body.password),
     };
     logger.debug("User: " + userData);
-    User.create(userData)
-      .then((user) => {
-        logger.info("User registered successfully" + user);
-        token = generateToken(user);
-        res.status(StatusCodes.CREATED).send({ token: token });
-      })
-      .catch((error) => {
-        logger.error("Error in registering user: " + error);
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
-          message: "Error registering user",
+    User.findOne({
+      $or: [{ username: userData.username }, { email: userData.email }],
+    }).then((user) => {
+      if (user) {
+        logger.error("User already exists");
+        return res.status(StatusCodes.BAD_REQUEST).send({
+          message: "A user with same username/email already exists",
         });
-      });
+      } else {
+        User.create(userData)
+          .then((user) => {
+            logger.info("User registered successfully" + user);
+            token = generateToken(user);
+            return res.status(StatusCodes.CREATED).send({ token: token });
+          })
+          .catch((error) => {
+            logger.error("Error in registering user: " + error);
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
+              message: "Error registering user",
+            });
+          });
+      }
+    });
   }
 );
 
-AuthRouter.post("/login", async (req, res) => {
+AuthRouter.post("/login", dtoValidator(LoginDto, "body"), async (req, res) => {
   const logger = req.logger;
   const { username, password } = req.body;
   logger.info("Logging in user:" + username);
   User.findOne({ username: username })
     .then(async (user) => {
       if (!user) {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: "User not found" });
+        return res
+          .status(StatusCodes.BAD_REQUEST)
+          .send({ message: "User not found" });
       }
       if (await comparePassword(password, user.password)) {
         const token = generateToken(user);
@@ -66,7 +80,7 @@ AuthRouter.post("/login", async (req, res) => {
     })
     .catch((error) => {
       logger.error("Error finding user: " + error);
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({
         message: "Error finding user",
       });
     });

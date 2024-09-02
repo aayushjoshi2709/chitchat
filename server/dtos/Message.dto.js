@@ -1,5 +1,4 @@
 const MessageDto = {
-  from: "string",
   to: "string",
   message: "string",
 };

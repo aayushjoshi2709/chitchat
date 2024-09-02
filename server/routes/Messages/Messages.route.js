@@ -5,11 +5,8 @@ const User = require("../../models/User/User.model");
 const Message = require("../../models/Messages/Messages.model");
 const MessageDto = require("../../dtos/Message.dto");
 const dtoValidator = require("../../middlewares/dtoValidator.middleware");
-
 // group messages by sender id and remove extra info
 function groupByKey(array, given_id) {
-  const logger = req.logger;
-  logger.info("Grouping messages by sender id: ", given_id);
   var res = {};
   array.forEach((ele) => {
     var msg = {
@@ -67,25 +64,63 @@ function sortMessages(result) {
 // get all messages route
 MessagesRouter.get("/", async (req, res) => {
   const logger = req.logger;
-  logger.info("Getting all messages for user: ", req.user._id);
+  logger.info("Getting all messages for user: " + req.user._id);
   User.findById(req.user._id)
     .populate({ path: "messages", populate: { path: "from to" } })
     .exec()
-    .then(function (error, user) {
-      if (error) {
-        logger.error("Error in finding user: ", error);
+    .then(function (user) {
+      if (!user) {
+        logger.error("Error in finding user: " + error);
         res
-          .send(
-            JSON.stringify({ status: "error", error: "Error finding user" })
-          )
+          .send(JSON.stringify({ message: "Error finding user" }))
           .status(StatusCodes.INTERNAL_SERVER_ERROR);
       } else {
+        logger.info("Got the user messages: " + user.messages);
         // group all elemenRouterts by person
-        var result = groupByKey(user.messages, req.user._id);
+        const result = groupByKey(user.messages, req.user._id);
         // sort all element by last time recieved
         res.send(JSON.stringify(sortMessages(result)));
       }
+    })
+    .catch((error) => {
+      logger.error("Error in finding user: " + error);
+      res
+        .send(JSON.stringify({ message: "Error finding user" }))
+        .status(StatusCodes.INTERNAL_SERVER_ERROR);
     });
+});
+
+// get messages with a particular user
+MessagesRouter.get("/:username", async (req, res) => {
+  logger = req.logger;
+  logger.info("Getting messages with user: " + req.params.username);
+  User.findOne({ username: req.params.username }).then((user) => {
+    if (!user) {
+      logger.error("Error in finding friend: " + error);
+      res
+        .send(JSON.stringify({ message: "Error finding friend" }))
+        .status(StatusCodes.INTERNAL_SERVER_ERROR);
+    } else {
+      Message.find({
+        $or: [
+          { from: req.user._id, to: user._id },
+          { from: user._id, to: req.user._id },
+        ],
+      })
+        .select({
+          message: 1,
+          time: 1,
+          from: 1,
+          to: 1,
+          _id: 0,
+        })
+        .sort({ time: 1 })
+        .then((messages) => {
+          logger.info("Got the user messages: " + messages);
+          res.send(JSON.stringify(messages));
+        });
+    }
+  });
 });
 
 // create message route
@@ -101,8 +136,8 @@ MessagesRouter.post(
       status: "sent",
       message: req.body.message,
     };
-    logger.debug("Message: ", message);
-    User.findById({ username: req.body.to })
+    logger.debug("Message: " + message);
+    User.findOne({ username: req.body.to })
       .then((user) => {
         if (!user) {
           return res
@@ -120,11 +155,11 @@ MessagesRouter.post(
           user.save();
           fromUser.messages = [...fromUser.messages, message._id];
           fromUser.save();
-          res.send(JSON.stringify({ status: "success", id: message._id }));
+          res.send(JSON.stringify({ message: "Message sent" }));
         });
       })
       .catch((error) => {
-        logger.error("Error in finding destination user: ", error);
+        logger.error("Error in finding destination user: " + error);
         res
           .send(
             JSON.stringify({
