@@ -5,94 +5,52 @@ const User = require("../../models/User/User.model");
 const Message = require("../../models/Messages/Messages.model");
 const MessageDto = require("../../dtos/Message.dto");
 const dtoValidator = require("../../middlewares/dtoValidator.middleware");
-// group messages by sender id and remove extra info
-function groupByKey(array, given_id) {
-  var res = {};
-  array.forEach((ele) => {
-    var msg = {
-      id: ele._id,
-      message: ele.message,
-      time: ele.time,
-      from: ele.from._id,
-      to: ele.to._id,
-      status: ele.status,
-    };
-    if (ele.to._id == given_id) {
-      var id = ele.from._id;
-      if (res[id]) {
-        res[id].messages.push(msg);
-      } else {
-        res[id] = { messages: [msg] };
-        res[id].name = ele.from.firstName + " " + ele.from.lastName;
-        res[id].username = ele.from.username;
-      }
-      res[id].lasttime = msg.time;
-    } else if (ele.from._id == given_id) {
-      var id = ele.to._id;
-      if (res[id]) res[id].messages.push(msg);
-      else {
-        res[id] = { messages: [msg] };
-        res[id].name = ele.to.firstName + " " + ele.to.lastName;
-        res[id].username = ele.to.username;
-      }
-      res[id].lasttime = msg.time;
-    }
-  });
-  return res;
-}
-
-// sort grouped messages by last recieved custom comparator
-function comparator(a, b) {
-  if (a[1].lasttime > b[1].lasttime) return -1;
-  else if (a[1].lasttime < b[1].lasttime) return 1;
-  else return 0;
-}
-// sort messages by last time
-function sortMessages(result) {
-  var arr = [];
-  var res = {};
-  for (var key in result) {
-    arr.push([key, result[key]]);
-  }
-  arr.sort(comparator);
-  arr.forEach((element) => {
-    res[element[0]] = element[1];
-  });
-  return res;
-}
-
 // get all messages route
 MessagesRouter.get("/", async (req, res) => {
   const logger = req.logger;
   logger.info("Getting all messages for user: " + req.user._id);
-  User.findById(req.user._id)
-    .populate({ path: "messages", populate: { path: "from to" } })
-    .exec()
-    .then(function (user) {
-      if (!user) {
-        logger.error("Error in finding user: " + error);
-        res
-          .send(JSON.stringify({ message: "Error finding user" }))
-          .status(StatusCodes.INTERNAL_SERVER_ERROR);
-      } else {
-        logger.info("Got the user messages: " + user.messages);
-        // group all elemenRouterts by person
-        const result = groupByKey(user.messages, req.user._id);
-        // sort all element by last time recieved
-        res.send(JSON.stringify(sortMessages(result)));
-      }
+  const selectOptions = "username -_id";
+  limit = req.query.limit || 500;
+  skip = req.query.skip || 0;
+  Message.find({
+    $or: [{ from: req.user._id }, { to: req.user._id }],
+  })
+    .select("from to message time status -_id")
+    .populate({
+      path: "from",
+      select: selectOptions,
     })
-    .catch((error) => {
-      logger.error("Error in finding user: " + error);
-      res
-        .send(JSON.stringify({ message: "Error finding user" }))
-        .status(StatusCodes.INTERNAL_SERVER_ERROR);
+    .populate({
+      path: "to",
+      select: selectOptions,
+    })
+    .skip(skip)
+    .limit(limit)
+    .sort({ time: 1 })
+    .then((messages) => {
+      logger.info("Got the messages: " + messages);
+      const response = {};
+      messages.map((message) => {
+        if (message.from._id != req.user._id) {
+          response[message.to.username] = response[message.to.username] || [];
+          response[message.to.username].push(message);
+          return;
+        } else {
+          response[message.from.username] =
+            response[message.from.username] || [];
+          response[message.from.username].push(message);
+          return;
+        }
+      });
+      res.send(JSON.stringify(response));
     });
 });
 
 // get messages with a particular user
 MessagesRouter.get("/:username", async (req, res) => {
   logger = req.logger;
+  limit = req.query.limit || 50;
+  skip = req.query.skip || 0;
   logger.info("Getting messages with user: " + req.params.username);
   User.findOne({ username: req.params.username }).then((user) => {
     if (!user) {
@@ -107,17 +65,17 @@ MessagesRouter.get("/:username", async (req, res) => {
           { from: user._id, to: req.user._id },
         ],
       })
-        .select({
-          message: 1,
-          time: 1,
-          from: 1,
-          to: 1,
-          _id: 0,
-        })
+        .skip(skip)
+        .limit(limit)
+        .populate("from", "username -_id")
+        .populate("to", "username -_id")
+        .select("from to message time status -_id")
         .sort({ time: 1 })
         .then((messages) => {
           logger.info("Got the user messages: " + messages);
-          res.send(JSON.stringify(messages));
+          const response = {};
+          response[user.username] = messages;
+          res.send(JSON.stringify(response));
         });
     }
   });

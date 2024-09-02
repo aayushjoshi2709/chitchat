@@ -46,6 +46,7 @@ friendRouter.get("/", async (req, res) => {
   const user = req.user;
   logger.info("Going to get all friends of user: " + user._id);
   User.findById(user._id)
+    .select("friends")
     .populate({
       path: "friends",
       select: "firstName lastName email username image -_id",

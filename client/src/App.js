@@ -20,10 +20,13 @@ const App = () => {
   window.addEventListener("onbeforeunload", function (e) {
     socket.disconnect();
   });
+
   // states to store data for the user
   const [user, setUser] = useState(null);
   const [friends, setFriends] = useState({});
   const [messages, setMessages] = useState({});
+  const [JWTToken, setJWTToken] = useState("");
+
   // get messages function
   const getMessages = async () => {
     await axios.get(`/user/${user.id}/message`).then(function (response) {
@@ -34,11 +37,18 @@ const App = () => {
   };
   // const get friends
   const getFriends = async () => {
-    await axios.get(`/user/${user.id}/friend`).then(function (response) {
-      if (response.status == 200) {
-        setFriends(response.data);
-      }
-    });
+    await axios
+      .get(
+        `/friends`,
+        (Headers = {
+          Authorization: `Bearer ${JWTToken}`,
+        })
+      )
+      .then(function (response) {
+        if (response.status == 200) {
+          setFriends(response.data);
+        }
+      });
   };
   useEffect(() => {
     if (user != undefined) {
@@ -107,19 +117,9 @@ const App = () => {
   };
   // logout function
   const logOut = async function () {
-    await axios
-      .post("http://127.0.0.1:5000/logout")
-      .then(function (response) {
-        setUser({});
-        setFriends({});
-        setMessages({});
-        return true;
-      })
-      .catch(function (error) {
-        console.log(error);
-        return false;
-      });
+    setJWTToken("");
   };
+
   // check for recived messages
   function checkRecieved() {
     for (let key in messages) {
