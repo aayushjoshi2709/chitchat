@@ -1,19 +1,18 @@
 import React from "react";
 import Contact from "./Contact/Contact";
 import styles from "./contacts.module.css";
-function Contacts(props) {
+function Contacts({ messages, friends, getTime, loadMessages }) {
   return (
     <div className={styles.contacts}>
-      {Object.keys(props.messages).map((index) => {
+      {Object.keys(messages).map((index) => {
         return (
           <Contact
-            getTime={props.getTime}
+            getTime={getTime}
             key={index}
-            contact={props.friends[index]}
-            lastMessage={
-              props.messages[index][props.messages[index].length - 1]
-            }
-            loadMessages={props.loadMessages}
+            friendUsername={index}
+            contact={friends[index]}
+            lastMessage={messages[index][messages[index].length - 1]}
+            loadMessages={loadMessages}
           />
         );
       })}

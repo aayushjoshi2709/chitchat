@@ -1,6 +1,24 @@
 import React from "react";
 
-const Friends = (props) => {
+const Friends = ({ friends, JWTToken }) => {
+  const removeFriend = (username) => {
+    console.log(username);
+    fetch(`/friends/${username}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${JWTToken}`,
+      },
+    })
+      .then((response) => {
+        if (response.status === 200) {
+          return response.json();
+        }
+      })
+      .then((data) => {
+        console.log(data);
+        window.location.reload();
+      });
+  };
   return (
     <div id="friends-container" className="container">
       <div className="row">
@@ -56,26 +74,28 @@ const Friends = (props) => {
                   </tr>
                 </thead>
                 <tbody id="friends-table-body">
-                  {Object.keys(props.friends).map((key, index) => {
-                    return (
-                      <tr key={key}>
-                        <th scope="row">{index + 1}</th>
-                        <td>{props.friends[key].name}</td>
-                        <td>{props.friends[key].email}</td>
-                        <td>{props.friends[key].handle}</td>
-                        <td>
-                          <button
-                            className="btn btn-danger"
-                            onClick={() => {
-                              props.removeFriend(key);
-                            }}
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {friends
+                    ? friends.map((friend, index) => {
+                        return (
+                          <tr key={friend.username}>
+                            <th scope="row">{index + 1}</th>
+                            <td>{friend.firstName + " " + friend.lastName}</td>
+                            <td>{friend.email}</td>
+                            <td>@{friend.username}</td>
+                            <td>
+                              <button
+                                className="btn btn-danger"
+                                onClick={() => {
+                                  removeFriend(friend.username);
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    : ""}
                 </tbody>
               </table>
             </div>

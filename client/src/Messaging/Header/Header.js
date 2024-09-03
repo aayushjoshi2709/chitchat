@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 const Header = (props) => {
   const data = (props) => {
+    console.log(props.user);
     return (
       <div className={Styles.header}>
         <img
@@ -15,10 +16,16 @@ const Header = (props) => {
           }
         />
         {props.currentUser === false ? (
-          <div className={Styles.details}>
-            <p>{props.user.firstName + " " + props.user.lastName}</p>
-            <small>Online</small>
-          </div>
+          props.user ? (
+            <div className={Styles.details}>
+              <p>{props.user.firstName + " " + props.user.lastName}</p>
+              <small>Online</small>
+            </div>
+          ) : (
+            <div className={Styles.details}>
+              <p>Removed Friend</p>
+            </div>
+          )
         ) : (
           ""
         )}

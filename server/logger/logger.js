@@ -1,10 +1,7 @@
 const winston = require("winston");
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || "info",
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
+  format: winston.format.combine(winston.format.simple()),
   transports: [
     new winston.transports.Console(),
     new winston.transports.File({ filename: "logs/error.log", level: "error" }),
@@ -52,6 +49,17 @@ asyncLog.warn = (message) => {
 asyncLog.debug = (message) => {
   return new Promise((resolve, reject) => {
     logger.debug(message, (err) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(true);
+    });
+  });
+};
+
+asyncLog.silly = (message) => {
+  return new Promise((resolve, reject) => {
+    logger.silly(message, (err) => {
       if (err) {
         return reject(err);
       }

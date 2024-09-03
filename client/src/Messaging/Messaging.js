@@ -4,7 +4,7 @@ import RPane from "./RightPane/RightPane";
 import { useState, useEffect } from "react";
 import "./Styles/messaging.css";
 import styles from "./messaging.module.css";
-const Messaging = (props) => {
+const Messaging = ({ friends, messages, user, socket }) => {
   const [isRightOn, setIsRightOn] = useState(false);
   const [friendusername, setFriendUserName] = useState("");
   function getTime(str) {
@@ -31,19 +31,19 @@ const Messaging = (props) => {
       <div className={styles.topContainer}>
         <div className={styles.mainContainer}>
           <LPane
-            user={props.user}
-            messages={props.messages}
+            user={user}
+            messages={messages}
             getTime={getTime}
             loadMessages={loadMessages}
-            friends={props.friends}
+            friends={friends}
           />
           {isRightOn ? (
             <RPane
-              user={props.user}
-              friend={props.friends[friendusername]}
-              messageData={props.messages[friendusername]}
+              user={user}
+              friend={friends[friendusername]}
+              messageData={messages[friendusername]}
               getTime={getTime}
-              socket={props.socket}
+              socket={socket}
             />
           ) : (
             ""

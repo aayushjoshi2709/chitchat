@@ -17,6 +17,7 @@ userRouter.get("/", isAuthenticated, async (req, res) => {
 userRouter.get("/about", isAuthenticated, async (req, res) => {
   const logger = req.logger;
   User.findById(req.user._id)
+    .select("firstName lastName email username image friends -_id")
     .populate({
       path: "friends",
       select: "firstName lastName email username image -_id",
@@ -43,9 +44,17 @@ userRouter.post(
     const logger = req.logger;
     const userId = req.user._id;
     logger.info("Going to upload image for user: " + userId);
+    logger.info("File details: " + req.file);
+    if (req.file === undefined) {
+      logger.error("No file uploaded");
+      return res
+        .send({ message: "No file uploaded" })
+        .status(StatusCodes.BAD_REQUEST);
+    }
     User.updateOne({ _id: userId }, { $set: { image: req.file.path } })
       .then((user) => {
         logger.info("Successfully updated the profile picture");
+        logger.info("User: " + user);
         res.send({ message: "Successfully updated the profile picture" });
       })
       .catch((error) => {

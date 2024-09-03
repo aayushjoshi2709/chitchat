@@ -52,7 +52,7 @@ const App = () => {
           Authorization: `Bearer ${JWTToken}`,
         },
       })
-      .then(function (response) {
+      .then((response) => {
         if (response.status === 200) {
           setMessages(response.data);
         }
@@ -66,7 +66,7 @@ const App = () => {
           Authorization: `Bearer ${JWTToken}`,
         },
       })
-      .then(function (response) {
+      .then((response) => {
         if (response.status === 200) {
           const friendMap = {};
           response.data.forEach((friend) => {
@@ -116,14 +116,13 @@ const App = () => {
         username: uname,
         password: pass,
       })
-      .then(function (response) {
+      .then((response) => {
         if (response.status === 200) {
           setJWTToken(response.data.token);
-          localStorage.setItem("token", response.data.token);
           return true;
         }
       })
-      .catch(function (error) {
+      .catch((error) => {
         console.log(error);
       });
     return false;
@@ -145,23 +144,16 @@ const App = () => {
         username: username,
         password: pass,
       })
-      .then(function (response) {
+      .then((response) => {
         if (response.status === 200 && response.data !== undefined) {
           setJWTToken(response.data.token);
-          localStorage.setItem("token", response.data.token);
           return true;
         }
       })
-      .catch(function (error) {
+      .catch((error) => {
         console.log(error);
       });
     return false;
-  };
-
-  // logout function
-  const logOut = async function () {
-    localStorage.removeItem("token");
-    setJWTToken("");
   };
 
   useEffect(() => {
@@ -171,7 +163,7 @@ const App = () => {
         setJWTToken(token);
       }
     }
-  });
+  }, []);
 
   // check for recived messages
   function checkRecieved() {
@@ -216,7 +208,7 @@ const App = () => {
         <Route
           exact
           path="/about"
-          element={<About friends={friends} user={user} logOut={logOut} />}
+          element={<About JWTToken={JWTToken} setJWTToken={setJWTToken} />}
         />
       </Routes>
     </Router>

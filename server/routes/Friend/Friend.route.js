@@ -4,12 +4,12 @@ const logger = require("../../logger/logger");
 const User = require("../../models/User/User.model");
 
 // create new friend route
-friendRouter.put("/", async (req, res) => {
+friendRouter.put("/:username", async (req, res) => {
   const logger = req.logger;
   logger.info("Going to create a new friend");
-  logger.debug("Request body: " + req.body);
+  logger.debug("Request Params: " + req.params);
   const user = req.user;
-  const friendUsername = req.body.username;
+  const friendUsername = req.params.username;
   logger.info("Going to find the friend: " + friendUsername);
   User.findOne({ username: friendUsername })
     .then((friend) => {
@@ -66,10 +66,10 @@ friendRouter.get("/", async (req, res) => {
 });
 
 // delete friend
-friendRouter.delete("/", async (req, res) => {
-  logger.info("Going to delete a friend: " + req.body.username);
+friendRouter.delete("/:username", async (req, res) => {
+  logger.info("Going to delete a friend: " + req.params.username);
   const user = req.user;
-  User.findOne({ username: req.body.username })
+  User.findOne({ username: req.params.username })
     .then((friend) => {
       user.friends.remove(friend._id);
       user.save();
