@@ -6,6 +6,7 @@ const UserDto = require("../../dtos/User.dto");
 const LoginDto = require("../../dtos/Login.dto");
 const jwt = require("jsonwebtoken");
 const dtoValidator = require("../../middlewares/dtoValidator.middleware");
+
 async function hashPassword(password) {
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -69,6 +70,7 @@ AuthRouter.post("/login", dtoValidator(LoginDto, "body"), async (req, res) => {
   User.findOne({ username: username })
     .then(async (user) => {
       if (!user) {
+        logger.error("User not found");
         return res
           .status(StatusCodes.BAD_REQUEST)
           .send({ message: "User not found" });

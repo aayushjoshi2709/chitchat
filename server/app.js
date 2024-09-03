@@ -19,7 +19,7 @@ require("dotenv").config();
 // set app to use cors
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "*",
   })
 );
 // set app to user body parser
