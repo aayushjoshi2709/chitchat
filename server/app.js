@@ -29,7 +29,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 // creating user model with mongoose
 mongoose.set("strictQuery", false);
-mongoose.connect(process.env.databaseURL, {
+mongoose.connect(process.env.DATABASE_URI, {
   useUnifiedTopology: true,
   minPoolSize: 10,
   maxPoolSize: 20,

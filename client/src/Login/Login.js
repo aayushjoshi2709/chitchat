@@ -2,7 +2,7 @@ import React from "react";
 import Footer from "../Common/Footer/Footer";
 import Header from "../Common/Header/Header";
 import LoginPage from "./LoginPage/LoginPage";
-function Login(props) {
+function Login({ setJWTToken }) {
   return (
     <div
       className="d-flex flex-column"
@@ -11,7 +11,7 @@ function Login(props) {
       }}
     >
       <Header />
-      <LoginPage login={props.login} />
+      <LoginPage setJWTToken={setJWTToken} />
       <Footer />
     </div>
   );

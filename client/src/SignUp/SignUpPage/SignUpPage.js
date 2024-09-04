@@ -1,26 +1,54 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-
-const SignUpPage = (props) => {
+import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
+const SignUpPage = ({ setJWTToken }) => {
   let navigate = useNavigate();
-  function signmeup(e) {
-    if (props.signUp(e)) {
-      navigate("/messaging");
-    }
-  }
+  const signUp = async (event) => {
+    event.preventDefault();
+    const fname = event.target[0].value;
+    const lname = event.target[1].value;
+    const email = event.target[2].value;
+    const username = event.target[3].value;
+    const pass = event.target[4].value;
+    axios
+      .post("/auth/register", {
+        firstName: fname,
+        lastName: lname,
+        email: email,
+        username: username,
+        password: pass,
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          console.log(response.data);
+          const token = response.data.token;
+          if (token) {
+            localStorage.setItem("token", response.data.token);
+            setJWTToken(response.data.token);
+          }
+          navigate("/dasboard");
+        }
+      })
+      .catch((error) => {
+        toast.error(error.response.data.message);
+      });
+    return false;
+  };
   return (
     <div
       className="container d-flex justify-content-center align-items-center"
       style={{ flex: 1 }}
     >
       <div className="col-sm-10 col-md-6" style={{ margin: "30px auto" }}>
+        <Toaster position="bottom-center" reverseOrder={false} />
         <div
           className="p-4 card rounded"
           style={{ backgroundColor: "rgba(225,225,225,0.6)" }}
         >
           <form
             onSubmit={(e) => {
-              signmeup(e);
+              signUp(e);
             }}
           >
             <h1

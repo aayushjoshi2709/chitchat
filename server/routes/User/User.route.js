@@ -55,7 +55,10 @@ userRouter.post(
       .then((user) => {
         logger.info("Successfully updated the profile picture");
         logger.info("User: " + user);
-        res.send({ message: "Successfully updated the profile picture" });
+        res.send({
+          message: "Successfully updated the profile picture",
+          image: req.file.path,
+        });
       })
       .catch((error) => {
         logger.error("Error in uploading profile picture: " + error);

@@ -19,7 +19,7 @@ const isAuthenticated = async (req, res, next) => {
         .status(StatusCodes.UNAUTHORIZED)
         .send({ message: "Invalid token" });
     }
-    const user=null;//await redisClient.get(decoded.id);
+    const user = await redisClient.get(decoded.id);
     if (user) {
       req.user = user;
       next();

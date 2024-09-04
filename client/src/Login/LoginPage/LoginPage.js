@@ -1,25 +1,50 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-function LoginPage(props) {
+import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
+
+function LoginPage({ setJWTToken }) {
   let navigate = useNavigate();
-  function logmein(e) {
-    if (props.login(e)) {
-      navigate("/messaging");
-    }
-  }
+
+  // login to the app
+  const login = async (event) => {
+    event.preventDefault();
+    let uname = event.target[0].value;
+    let pass = event.target[1].value;
+    axios
+      .post("/auth/login", {
+        username: uname,
+        password: pass,
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          const token = response.data.token;
+          if (token) {
+            localStorage.setItem("token", token);
+            setJWTToken(token);
+            navigate("/messaging");
+          }
+        }
+      })
+      .catch((error) => {
+        toast.error(error.response.data.message);
+      });
+  };
+
   return (
     <div
       className="container d-flex justify-content-center align-items-center rounded"
       style={{ flex: 1 }}
     >
       <div className="col-sm-10 col-md-6" style={{ margin: "30px auto" }}>
+        <Toaster position="bottom-center" reverseOrder={false} />
         <div
           className="p-4 card"
           style={{ backgroundColor: "rgba(225,225,225,0.6)" }}
         >
           <form
             onSubmit={(e) => {
-              logmein(e);
+              login(e);
             }}
           >
             <h1

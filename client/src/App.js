@@ -46,7 +46,7 @@ const App = () => {
 
   // get messages function
   const getMessages = async () => {
-    await axios
+    axios
       .get("/messages", {
         headers: {
           Authorization: `Bearer ${JWTToken}`,
@@ -60,7 +60,7 @@ const App = () => {
   };
   // const get friends
   const getFriends = async () => {
-    await axios
+    axios
       .get(`/friends`, {
         headers: {
           Authorization: `Bearer ${JWTToken}`,
@@ -79,7 +79,7 @@ const App = () => {
 
   // get user function
   const getUser = async () => {
-    await axios
+    axios
       .get(`/user`, {
         headers: {
           Authorization: `Bearer ${JWTToken}`,
@@ -106,55 +106,7 @@ const App = () => {
     }
   }, [JWTToken]);
 
-  // login to the app
-  const login = async (event) => {
-    event.preventDefault();
-    let uname = event.target[0].value;
-    let pass = event.target[1].value;
-    axios
-      .post("/auth/login", {
-        username: uname,
-        password: pass,
-      })
-      .then((response) => {
-        if (response.status === 200) {
-          setJWTToken(response.data.token);
-          return true;
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-    return false;
-  };
-
   // sign up function
-  const signUp = async (event) => {
-    event.preventDefault();
-    const fname = event.target[0].value;
-    const lname = event.target[1].value;
-    const email = event.target[2].value;
-    const username = event.target[3].value;
-    const pass = event.target[4].value;
-    axios
-      .post("/auth/register", {
-        firstName: fname,
-        lastName: lname,
-        email: email,
-        username: username,
-        password: pass,
-      })
-      .then((response) => {
-        if (response.status === 200 && response.data !== undefined) {
-          setJWTToken(response.data.token);
-          return true;
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-    return false;
-  };
 
   useEffect(() => {
     if (JWTToken === "") {
@@ -191,7 +143,11 @@ const App = () => {
     <Router>
       <Routes>
         <Route exact path="/" element={<Main />} />
-        <Route exact path="/login" element={<Login login={login} />} />
+        <Route
+          exact
+          path="/login"
+          element={<Login setJWTToken={setJWTToken} />}
+        />
         <Route
           exact
           path="/messaging"
@@ -204,7 +160,11 @@ const App = () => {
             />
           }
         />
-        <Route exact path="/register" element={<SignUp signUp={signUp} />} />
+        <Route
+          exact
+          path="/register"
+          element={<SignUp setJWTToken={setJWTToken} />}
+        />
         <Route
           exact
           path="/about"

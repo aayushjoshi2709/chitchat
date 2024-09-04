@@ -2,7 +2,6 @@ const { StatusCodes } = require("http-status-codes");
 const dtoValidator = (dto, validateKey) => {
   return (req, res, next) => {
     const data = req[validateKey];
-    console.log("here i am");
     errors = [];
     for (const key in dto) {
       if (data[key] === undefined) {

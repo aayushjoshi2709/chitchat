@@ -6,13 +6,13 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 function About({ JWTToken, setJWTToken }) {
   // logout function
-  const logOut = async function () {
+  const logOut = function () {
     localStorage.removeItem("token");
     setJWTToken("");
   };
   const [user, setUser] = useState({});
   useEffect(async () => {
-    await axios
+    axios
       .get("/user/about", {
         headers: {
           Authorization: `Bearer ${JWTToken}`,
@@ -32,7 +32,7 @@ function About({ JWTToken, setJWTToken }) {
     <div className={Styles.topContainer}>
       <div className={Styles.header}></div>
       <div className={Styles.mainContainer}>
-        <LeftPane user={user} logOut={logOut} />
+        <LeftPane setUser={setUser} user={user} logOut={logOut} />
         <RightPane user={user} JWTToken={JWTToken} />
       </div>
     </div>
