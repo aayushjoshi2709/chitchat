@@ -50,7 +50,6 @@ app.use(passport.initialize());
 
 // added the winston logger to the request object
 app.use((req, res, next) => {
-  logger.info("Request received by user: " + JSON.stringify(req.user));
   req.logger = logger;
   next();
 });

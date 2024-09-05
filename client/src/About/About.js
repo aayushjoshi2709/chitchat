@@ -32,7 +32,7 @@ function About({ JWTToken, setJWTToken }) {
     <div className={Styles.topContainer}>
       <div className={Styles.header}></div>
       <div className={Styles.mainContainer}>
-        <LeftPane setUser={setUser} user={user} logOut={logOut} />
+        <LeftPane JWTToken={JWTToken} setUser={setUser} user={user} logOut={logOut} />
         <RightPane user={user} JWTToken={JWTToken} />
       </div>
     </div>

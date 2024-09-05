@@ -2,7 +2,7 @@ import React from "react";
 import Footer from "../Common/Footer/Footer";
 import Header from "../Common/Header/Header";
 import SignUpPage from "./SignUpPage/SignUpPage";
-const SignUp = (props) => {
+const SignUp = ({ setJWTToken }) => {
   return (
     <div
       className="d-flex flex-column"
@@ -11,7 +11,7 @@ const SignUp = (props) => {
       }}
     >
       <Header />
-      <SignUpPage signUp={props.signUp} />
+      <SignUpPage setJWTToken={setJWTToken} />
       <Footer />
     </div>
   );

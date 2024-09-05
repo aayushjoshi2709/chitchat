@@ -19,30 +19,42 @@ const isAuthenticated = async (req, res, next) => {
         .status(StatusCodes.UNAUTHORIZED)
         .send({ message: "Invalid token" });
     }
-    const user = await redisClient.get(decoded.id);
-    if (user) {
-      req.user = user;
-      next();
-    } else {
-      await User.findById(decoded.id)
-        .then((user) => {
-          if (!user) {
-            logger.error("User not found for the token:" + decoded.id);
+
+    if (decoded.username) {
+      logger.info("Going to find user in cache: " + decoded.username);
+      const user = await redisClient.get(decoded.username);
+      if (user) {
+        logger.info("User found in cache: " + user.username);
+        req.user = JSON.parse(user);
+        next();
+      } else {
+        logger.info(
+          "User not found in cache going to hit the db:" + decoded.username
+        );
+        await User.findOne({ username: decoded.username })
+          .then((user) => {
+            if (!user) {
+              logger.error("User not found for the token:" + token);
+              return res
+                .status(StatusCodes.UNAUTHORIZED)
+                .send({ message: "Invalid token" });
+            }
+            redisClient.set(decoded.username, JSON.stringify(user));
+            req.user = user;
+            next();
+          })
+          .catch((error) => {
+            logger.error("Error while finding user for the token:" + token);
+            logger.error(error);
             return res
-              .status(StatusCodes.UNAUTHORIZED)
-              .send({ message: "Invalid token" });
-          }
-          //redisClient.set(decoded.id, user);
-          req.user = user;
-          next();
-        })
-        .catch((error) => {
-          logger.error("Error while finding user for the token:" + decoded.id);
-          logger.error(error);
-          return res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ message: "Something went wrong" });
-        });
+              .status(StatusCodes.INTERNAL_SERVER_ERROR)
+              .send({ message: "Something went wrong" });
+          });
+      }
+    } else {
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .send({ message: "Invalid token" });
     }
   });
 };

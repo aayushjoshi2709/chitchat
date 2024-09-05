@@ -1,6 +1,8 @@
 const socket = require("socket.io");
 const User = require("../models/User/User.model");
 const Message = require("../models/Messages/Messages.model");
+const redisClient = require("../redis/redis");
+const { json } = require("body-parser");
 require("dotenv").config();
 // store socket id for a user on connection
 function EstablishSocket(http) {
@@ -16,6 +18,46 @@ function EstablishSocket(http) {
 }
 
 function afterConnect(socketObj) {
+  socketObj.use(async (socket, next) => {
+    if (socket.handshake.query && socket.handshake.query.token) {
+      jwt.verify(
+        socket.handshake.query.token,
+        process.env.JWT_SECRET,
+        async (err, decoded) => {
+          if (err) {
+            return next(new Error("Authentication error"));
+          }
+          user = redisClient.get(decoded.username);
+          if (user) {
+            logger.info("User found in cache: " + json.stringify(user));
+            socket.user = user;
+            next();
+          } else {
+            logger.info(
+              "User not found in cache going to hit the db:" + user.username
+            );
+            await User.findOne({ username: decoded.username })
+              .then((user) => {
+                if (!user) {
+                  logger.error("User not found for the token:" + token);
+                  next(new Error("User not found"));
+                }
+                redisClient.set(decoded.username, user);
+                socket.user = user;
+                next();
+              })
+              .catch((error) => {
+                logger.error("Error while finding user for the token:" + token);
+                logger.error(error);
+                next(new Error("Something went wrong"));
+              });
+          }
+        }
+      );
+    } else {
+      new Error("JWT token not supplied");
+    }
+  });
   socketObj.on("connection", (socket) => {
     socket.on("user", function (data) {
       User.findByIdAndUpdate(

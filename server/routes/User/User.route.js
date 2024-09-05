@@ -3,19 +3,20 @@ const userRouter = require("express").Router();
 const multerUpload = require("../../middlewares/multer.middleware");
 const { StatusCodes } = require("http-status-codes");
 const isAuthenticated = require("../../middlewares/isAuthenticated.middleware");
-
+const redisClient = require("../../redis/redis");
 userRouter.get("/", isAuthenticated, async (req, res) => {
   logger = req.logger;
   logger.info("Getting user details");
-  let user = req.user.toObject();
+  let user = req.user;
   delete user.password;
   delete user._id;
-  logger.info("User details: " + user);
+  logger.info("User details: " + JSON.stringify(user));
   res.send(user);
 });
 
 userRouter.get("/about", isAuthenticated, async (req, res) => {
   const logger = req.logger;
+  console.log("Here is req user: ", req.user);
   User.findById(req.user._id)
     .select("firstName lastName email username image friends -_id")
     .populate({
@@ -24,6 +25,12 @@ userRouter.get("/about", isAuthenticated, async (req, res) => {
     })
     .exec()
     .then((user) => {
+      if (!user) {
+        logger.error("User not found");
+        return res
+          .send({ message: "User not found" })
+          .status(StatusCodes.NOT_FOUND);
+      }
       delete user.password;
       delete user._id;
       logger.info("Got the user: " + user);
@@ -51,10 +58,15 @@ userRouter.post(
         .send({ message: "No file uploaded" })
         .status(StatusCodes.BAD_REQUEST);
     }
-    User.updateOne({ _id: userId }, { $set: { image: req.file.path } })
+    req.user.image = req.file.path;
+    User.findByIdAndUpdate(userId, { image: req.file.path })
       .then((user) => {
         logger.info("Successfully updated the profile picture");
-        logger.info("User: " + user);
+        logger.info("User: " + JSON.stringify(user));
+        logger.info(
+          "Going to delete user object from cache for: " + req.user.username
+        );
+        redisClient.del(req.user.username);
         res.send({
           message: "Successfully updated the profile picture",
           image: req.file.path,

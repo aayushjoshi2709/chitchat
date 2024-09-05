@@ -2,7 +2,6 @@ import React from "react";
 
 const Friends = ({ friends, JWTToken }) => {
   const removeFriend = (username) => {
-    console.log(username);
     fetch(`/friends/${username}`, {
       method: "DELETE",
       headers: {
@@ -15,7 +14,6 @@ const Friends = ({ friends, JWTToken }) => {
         }
       })
       .then((data) => {
-        console.log(data);
         window.location.reload();
       });
   };

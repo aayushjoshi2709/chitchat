@@ -4,7 +4,14 @@ import SendMessage from "./SendMessage/SendMessage";
 import Messages from "./Messages/Messages";
 import "../Styles/messaging.css";
 import styles from "./rightPane.module.css";
-const RightPane = ({ friend, user, socket, messageData, getTime }) => {
+const RightPane = ({
+  friend,
+  user,
+  socket,
+  messageData,
+  getTime,
+  JWTToken,
+}) => {
   return (
     <div className={styles.rightPane}>
       <Header user={friend} currentUser={false} />
@@ -14,7 +21,7 @@ const RightPane = ({ friend, user, socket, messageData, getTime }) => {
         messageData={messageData}
         getTime={getTime}
       />
-      {friend ? <SendMessage /> : null}
+      {friend ? <SendMessage socket={socket} /> : null}
     </div>
   );
 };

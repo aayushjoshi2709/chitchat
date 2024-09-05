@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 
 const Header = (props) => {
   const data = (props) => {
-    console.log(props.user);
     return (
       <div className={Styles.header}>
         <img

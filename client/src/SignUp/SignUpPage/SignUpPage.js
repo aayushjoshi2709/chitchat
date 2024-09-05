@@ -20,14 +20,14 @@ const SignUpPage = ({ setJWTToken }) => {
         password: pass,
       })
       .then((response) => {
-        if (response.status === 200) {
-          console.log(response.data);
+        if (response.status === 201) {
           const token = response.data.token;
           if (token) {
-            localStorage.setItem("token", response.data.token);
-            setJWTToken(response.data.token);
+            toast.success(response.data.message);
+            localStorage.setItem("token", token);
+            setJWTToken(token);
+            navigate("/messaging");
           }
-          navigate("/dasboard");
         }
       })
       .catch((error) => {

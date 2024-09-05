@@ -31,11 +31,11 @@ MessagesRouter.get("/", async (req, res) => {
       logger.info("Got the messages: " + messages);
       const response = {};
       messages.map((message) => {
-        if (message.from._id == req.user._id) {
+        if (message.from.username == req.user.username) {
           response[message.to.username] = response[message.to.username] || [];
           response[message.to.username].push(message);
           return;
-        } else {
+        } else if (message.to.username == req.user.username) {
           response[message.from.username] =
             response[message.from.username] || [];
           response[message.from.username].push(message);
@@ -111,9 +111,15 @@ MessagesRouter.post(
           const fromUser = req.user;
           user.messages = [...user.messages, message._id];
           user.save();
-          fromUser.messages = [...fromUser.messages, message._id];
-          fromUser.save();
-          res.send(JSON.stringify({ message: "Message sent" }));
+          User.findByIdAndUpdate(fromUser._id, {
+            messages: [...fromUser.messages, message._id],
+          })
+            .then((user) => {
+              res.send(JSON.stringify({ message: "Message sent" }));
+            })
+            .catch((error) => {
+              logger.error("Error in updating to from user: " + error);
+            });
         });
       })
       .catch((error) => {

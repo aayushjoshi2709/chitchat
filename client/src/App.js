@@ -14,15 +14,11 @@ import About from "./About/About";
 import io from "socket.io-client";
 import "./App.css";
 const App = () => {
-  const socket = io.connect({
-    transports: ["websocket"],
-    reconnection: true,
-    reconnectionDelay: 1000,
-  });
+  let socket = null;
   axios.defaults.baseURL = "http://localhost:5000";
   // disconnect socket when when window/browser/site is closed
   window.addEventListener("onbeforeunload", function (e) {
-    socket.disconnect();
+    if (socket) socket.disconnect();
   });
   // states to store data for the user
   const [user, setUser] = useState(null);
@@ -95,10 +91,15 @@ const App = () => {
       });
   };
   useEffect(async () => {
-    if (JWTToken !== "") {
+    if (JWTToken && JWTToken !== "") {
       await getUser();
       await getFriends();
       await getMessages();
+      socket = io.connect({
+        transports: ["websocket"],
+        reconnection: true,
+        reconnectionDelay: 1000,
+      });
       socket.on("connect", function () {
         // Send emit user id right after connect
         socket.emit("user", JWTToken);
@@ -125,7 +126,8 @@ const App = () => {
         if (
           message.status &&
           message.status !== "seen" &&
-          message.to.username === user.username
+          message.to.username === user.username &&
+          socket != null
         ) {
           socket.emit("update_message_status_received", message._id);
           message.status = "received";
@@ -157,6 +159,7 @@ const App = () => {
               friends={friends}
               user={user}
               socket={socket}
+              JWTToken={JWTToken}
             />
           }
         />

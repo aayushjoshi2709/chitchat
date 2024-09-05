@@ -4,7 +4,7 @@ import RPane from "./RightPane/RightPane";
 import { useState, useEffect } from "react";
 import "./Styles/messaging.css";
 import styles from "./messaging.module.css";
-const Messaging = ({ friends, messages, user, socket }) => {
+const Messaging = ({ friends, messages, user, socket, JWTToken }) => {
   const [isRightOn, setIsRightOn] = useState(false);
   const [friendusername, setFriendUserName] = useState("");
   function getTime(str) {
@@ -44,6 +44,7 @@ const Messaging = ({ friends, messages, user, socket }) => {
               messageData={messages[friendusername]}
               getTime={getTime}
               socket={socket}
+              JWTToken={JWTToken}
             />
           ) : (
             ""
