@@ -14,17 +14,19 @@ import About from "./About/About";
 import io from "socket.io-client";
 import "./App.css";
 const App = () => {
-  let socket = null;
-  axios.defaults.baseURL = "http://localhost:5000";
-  // disconnect socket when when window/browser/site is closed
-  window.addEventListener("onbeforeunload", function (e) {
-    if (socket) socket.disconnect();
-  });
   // states to store data for the user
+  const [socket, setSocket] = useState(null);
   const [user, setUser] = useState(null);
   const [friends, setFriends] = useState({});
   const [messages, setMessages] = useState({});
   const [JWTToken, setJWTToken] = useState("");
+
+  axios.defaults.baseURL = "http://localhost:5000";
+
+  // disconnect socket when when window/browser/site is closed
+  window.addEventListener("onbeforeunload", function (e) {
+    if (socket) socket.disconnect();
+  });
 
   axios.interceptors.response.use(
     (response) => {
@@ -95,15 +97,18 @@ const App = () => {
       await getUser();
       await getFriends();
       await getMessages();
-      socket = io.connect({
+      const socket_conn = io.connect({
         transports: ["websocket"],
         reconnection: true,
         reconnectionDelay: 1000,
       });
-      socket.on("connect", function () {
-        // Send emit user id right after connect
-        socket.emit("user", JWTToken);
-      });
+      setSocket(socket_conn);
+      if (socket) {
+        socket.on("connect", function () {
+          // Send emit user id right after connect
+          socket.emit("user", JWTToken);
+        });
+      }
     }
   }, [JWTToken]);
 

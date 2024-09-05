@@ -2,24 +2,24 @@ import React from "react";
 import SentMessage from "./SentMessage/SentMessage";
 import ReceivedMessage from "./ReceivedMessage/ReceivedMessage";
 import Styles from "./messages.module.css";
-const Messages = (props) => {
-  console.table(props.messageData);
+const Messages = ({ messageData, getTime, socket, user }) => {
+  console.table(messageData);
   return (
     <div className={Styles.messages}>
-      {props.messageData
-        ? props.messageData.map(function (message) {
-            return message.from.username === props.user.username ? (
+      {messageData
+        ? messageData.map(function (message) {
+            return message.from.username === user.username ? (
               <SentMessage
                 key={message.id}
                 message={message}
-                getTime={props.getTime}
+                getTime={getTime}
               />
             ) : (
               <ReceivedMessage
                 key={message.id}
                 message={message}
-                getTime={props.getTime}
-                socket={props.socket}
+                getTime={getTime}
+                socket={socket}
               />
             );
           })

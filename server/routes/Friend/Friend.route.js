@@ -24,7 +24,20 @@ friendRouter.put("/:username", async (req, res) => {
 
       logger.info("Adding friend to user's friend list");
       user.friends.push(friend._id);
-      user.save();
+      User.findByIdAndUpdate(user._id, {
+        friends: [...user.friends, friend._id],
+      })
+        .exec()
+        .then((user) => {
+          logger.info("User updated successfully");
+        })
+        .catch((error) => {
+          logger.error("Error updating user: " + error);
+          return res
+            .send(JSON.stringify({ message: "Error adding friend" }))
+            .status(StatusCodes.INTERNAL_SERVER_ERROR);
+        });
+
       logger.info("Adding user to friend's friend list");
       friend.friends.push(user._id);
       friend.save();
@@ -72,7 +85,16 @@ friendRouter.delete("/:username", async (req, res) => {
   User.findOne({ username: req.params.username })
     .then((friend) => {
       user.friends.remove(friend._id);
-      user.save();
+      User.findByIdAndUpdate(user._id, { friends: user.friends })
+        .then((user) => {
+          logger.info("Removed friend from user: " + req.params.username);
+        })
+        .catch((error) => {
+          logger.error("Error updating user: " + error);
+          return res
+            .send(JSON.stringify({ message: "Error removing friend" }))
+            .status(StatusCodes.INTERNAL_SERVER_ERROR);
+        });
       friend.friends.remove(req.user._id);
       friend.save();
       return res

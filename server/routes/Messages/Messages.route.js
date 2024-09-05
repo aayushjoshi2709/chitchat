@@ -9,21 +9,15 @@ const dtoValidator = require("../../middlewares/dtoValidator.middleware");
 MessagesRouter.get("/", async (req, res) => {
   const logger = req.logger;
   logger.info("Getting all messages for user: " + req.user._id);
-  const selectOptions = "username -_id";
   limit = req.query.limit || 500;
   skip = req.query.skip || 0;
   Message.find({
-    $or: [{ from: req.user._id }, { to: req.user._id }],
+    $or: [
+      { "from.username": req.user.username },
+      { "to.username": req.user.username },
+    ],
   })
     .select("from to message time status")
-    .populate({
-      path: "from",
-      select: selectOptions,
-    })
-    .populate({
-      path: "to",
-      select: selectOptions,
-    })
     .skip(skip)
     .limit(limit)
     .sort({ time: 1 })
@@ -61,14 +55,12 @@ MessagesRouter.get("/:username", async (req, res) => {
     } else {
       Message.find({
         $or: [
-          { from: req.user._id, to: user._id },
-          { from: user._id, to: req.user._id },
+          { "from.username": req.user.username, "to.username": user.username },
+          { "from.username": user.username, "to.username": req.user.username },
         ],
       })
         .skip(skip)
         .limit(limit)
-        .populate("from", "username -_id")
-        .populate("to", "username -_id")
         .select("from to message time status")
         .sort({ time: 1 })
         .then((messages) => {
@@ -89,7 +81,9 @@ MessagesRouter.post(
     const logger = req.logger;
     logger.info("Going to create a new message");
     var message = {
-      from: req.user._id,
+      from: {
+        username: req.user.username,
+      },
       time: req.body.time || Date.now(),
       status: "sent",
       message: req.body.message,
@@ -106,21 +100,16 @@ MessagesRouter.post(
             )
             .status(StatusCodes.BAD_REQUEST);
         }
-        message.to = user._id;
-        Message.create(message).then((message) => {
-          const fromUser = req.user;
-          user.messages = [...user.messages, message._id];
-          user.save();
-          User.findByIdAndUpdate(fromUser._id, {
-            messages: [...fromUser.messages, message._id],
+        message.to = {
+          username: user.username,
+        };
+        Message.create(message)
+          .then((message) => {
+            res.send(JSON.stringify({ message: "Message sent" }));
           })
-            .then((user) => {
-              res.send(JSON.stringify({ message: "Message sent" }));
-            })
-            .catch((error) => {
-              logger.error("Error in updating to from user: " + error);
-            });
-        });
+          .catch((error) => {
+            logger.error("Error in updating to from user: " + error);
+          });
       })
       .catch((error) => {
         logger.error("Error in finding destination user: " + error);
