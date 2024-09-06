@@ -6,7 +6,7 @@ const UserDto = require("../../dtos/User.dto");
 const LoginDto = require("../../dtos/Login.dto");
 const jwt = require("jsonwebtoken");
 const dtoValidator = require("../../middlewares/dtoValidator.middleware");
-const redisClient = require("../../redis/redis");
+const { userRedis } = require("../../redis/redis");
 async function hashPassword(password) {
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -49,7 +49,7 @@ AuthRouter.post(
           .then((user) => {
             logger.info("User registered successfully" + user);
             token = generateToken(user);
-            redisClient.set(user.username, JSON.stringify(user));
+            userRedis.set(user.username, JSON.stringify(user));
             return res
               .status(StatusCodes.CREATED)
               .send({ message: "User registered successfully.", token: token });
@@ -80,7 +80,7 @@ AuthRouter.post("/login", dtoValidator(LoginDto, "body"), async (req, res) => {
       if (await comparePassword(password, user.password)) {
         const token = generateToken(user);
         logger.info("Login successful for username: " + username);
-        redisClient.set(user.username, JSON.stringify(user));
+        userRedis.set(user.username, JSON.stringify(user));
         return res
           .status(StatusCodes.OK)
           .send({ message: "Login successful", token: token });

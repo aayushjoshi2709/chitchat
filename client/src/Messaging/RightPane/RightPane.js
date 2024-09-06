@@ -21,7 +21,7 @@ const RightPane = ({
         messageData={messageData}
         getTime={getTime}
       />
-      {friend ? <SendMessage socket={socket} /> : null}
+      {friend ? <SendMessage friend={friend} socket={socket} /> : null}
     </div>
   );
 };

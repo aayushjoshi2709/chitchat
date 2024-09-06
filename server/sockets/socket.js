@@ -1,7 +1,7 @@
 const socket = require("socket.io");
 const User = require("../models/User/User.model");
 const Message = require("../models/Messages/Messages.model");
-const redisClient = require("../redis/redis");
+const { userRedis, socketRedis } = require("../redis/redis");
 const { json } = require("body-parser");
 require("dotenv").config();
 // store socket id for a user on connection
@@ -27,7 +27,7 @@ function afterConnect(socketObj) {
           if (err) {
             return next(new Error("Authentication error"));
           }
-          user = redisClient.get(decoded.username);
+          user = await userRedis.get(decoded.username);
           if (user) {
             logger.info("User found in cache: " + json.stringify(user));
             socket.user = user;
@@ -36,13 +36,13 @@ function afterConnect(socketObj) {
             logger.info(
               "User not found in cache going to hit the db:" + user.username
             );
-            await User.findOne({ username: decoded.username })
-              .then((user) => {
+            User.findOne({ username: decoded.username })
+              .then(async (user) => {
                 if (!user) {
                   logger.error("User not found for the token:" + token);
                   next(new Error("User not found"));
                 }
-                redisClient.set(decoded.username, user);
+                await userRedis.set(decoded.username, user);
                 socket.user = user;
                 next();
               })
@@ -60,77 +60,102 @@ function afterConnect(socketObj) {
   });
   socketObj.on("connection", (socket) => {
     socket.on("user", function (data) {
-      User.findByIdAndUpdate(
-        data,
-        { socketid: socket.id },
-        function (error, user) {
-          if (error) {
-            console.log("error in updation socket id");
-          }
-        }
+      logger.info(
+        `Going to connect user: ${data.username} to socket: ${socket.id}`
       );
+      socketRedis
+        .set(socket.user.username, socket.id)
+        .then(() => {
+          logger.info("Socket id saved for user: " + socket.user.username);
+        })
+        .catch((error) => {
+          logger.error(
+            "Error in saving socket id for user: " + socket.user.username
+          );
+          logger.error(error);
+        });
     });
     socket.on("new_message", function (message) {
-      User.findById(message.to, function (error, user) {
-        if (user.socketid !== "NULL") {
-          socketObj.to(user.socketid).emit("new_message", message);
+      const message = {
+        from: {
+          username: socket.user.username,
+        },
+        status: "sent",
+        time: Date.now(),
+      };
+      const friend = userRedis.get(message.to);
+      if (friend) {
+        message.to = {
+          username: friend.username,
+        };
+        const newMessage = new Message(message);
+        newMessage
+          .save()
+          .then((message) => {
+            friendSocketId = socketRedis.get(friend.username);
+            if (friendSocketId) {
+              socketObj.to(friendSocketId).emit("new_message", message);
+            }
+          })
+          .catch((error) => {
+            logger.error("Error in saving message: " + error);
+          });
+      } else {
+        User.findOne({ username: message.to }).then((friend) => {
+          if (!friend) {
+            logger.error("Error in finding friend: " + error);
+          } else {
+            message.to = {
+              username: friend.username,
+            };
+            const newMessage = new Message(message);
+            newMessage
+              .save()
+              .then((message) => {
+                const friendSocketId = socketRedis.get(friend.username);
+                if (friendSocketId) {
+                  socketObj.to(friendSocketId).emit("new_message", message);
+                }
+              })
+              .catch((error) => {
+                logger.error("Error in saving message: " + error);
+              });
+          }
+        });
+      }
+    });
+    socket.on("update_message_status_received", async (id) => {
+      Message.findByIdAndUpdate(id, { status: "received" }).then((message) => {
+        logger.info("Message status updated to received: " + message._id);
+        friendSocketId = socketRedis.get(message.from.username);
+        if (friendSocketId) {
+          socketObj
+            .to(friendSocketId)
+            .emit("update_message_status_received", id);
         }
       });
-    });
-    socket.on("update_message_status_received", function (id) {
-      Message.findByIdAndUpdate(
-        id,
-        { status: "received" },
-        function (error, message) {
-          if (error) {
-            console.log("cannot update status");
-          }
-          User.findById(message.from, function (error, user) {
-            if (user.socketid !== "NULL")
-              socketObj
-                .to(user.socketid)
-                .emit("update_message_status_received", id);
-          });
-        }
-      );
     });
     socket.on("add_friend", function (id) {
-      User.findById(id, function (error, user) {
-        if (error) console.log(error);
-        else {
-          if (user.socketid !== "NULL") {
-            socketObj.to(user.socketid).emit("add_friend", id);
-          }
+      const friendSocketId = socketRedis.get(id);
+      if (friendSocketId) {
+        const user = socket.user.copy();
+        delete user._id;
+        delete user.password;
+        socketObj.to(friendSocketId).emit("add_friend", socket.user);
+      }
+    });
+    socket.on("update_message_status_seen", async (id) => {
+      Message.findByIdAndUpdate(id, { status: "seen" }).then((message) => {
+        logger.info("Message status updated to seen: " + message._id);
+        friendSocketId = socketRedis.get(message.from.username);
+        if (friendSocketId) {
+          socketObj.to(friendSocketId).emit("update_message_status_seen", id);
         }
       });
     });
-    socket.on("update_message_status_seen", function (id) {
-      Message.findByIdAndUpdate(
-        id,
-        { status: "seen" },
-        function (error, message) {
-          if (error) {
-            console.log("cannot update status");
-          }
-          User.findById(message.from, function (error, user) {
-            if (user.socketid !== "NULL")
-              socketObj
-                .to(user.socketid)
-                .emit("update_message_status_seen", id);
-          });
-        }
-      );
-    });
-    socket.on("disconnect", function () {
-      User.findOneAndUpdate(
-        { socketid: socket.id },
-        { socketid: "NULL" },
-        function (error, user) {
-          if (error) {
-            console.log("error in removing socket id");
-          }
-        }
-      );
+    socket.on("disconnect", function (username) {
+      logger.info("User disconnected: " + username);
+      socketRedis.del(socket.user.username);
     });
   });
 }

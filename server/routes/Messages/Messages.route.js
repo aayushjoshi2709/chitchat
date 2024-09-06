@@ -8,8 +8,8 @@ const dtoValidator = require("../../middlewares/dtoValidator.middleware");
 // get all messages route
 MessagesRouter.get("/", async (req, res) => {
   const logger = req.logger;
-  logger.info("Getting all messages for user: " + req.user._id);
-  limit = req.query.limit || 500;
+  logger.info("Getting all messages for user: " + req.user.username);
+  limit = req.query.limit || 10000;
   skip = req.query.skip || 0;
   Message.find({
     $or: [
@@ -43,7 +43,7 @@ MessagesRouter.get("/", async (req, res) => {
 // get messages with a particular user
 MessagesRouter.get("/:username", async (req, res) => {
   logger = req.logger;
-  limit = req.query.limit || 50;
+  limit = req.query.limit || 500;
   skip = req.query.skip || 0;
   logger.info("Getting messages with user: " + req.params.username);
   User.findOne({ username: req.params.username }).then((user) => {

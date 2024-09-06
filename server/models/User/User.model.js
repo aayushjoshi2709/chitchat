@@ -13,7 +13,6 @@ const UserSchema = mongoose.Schema({
     unique: true,
     required: true,
   },
-  socketid: String,
   image: String,
   messages: [
     {

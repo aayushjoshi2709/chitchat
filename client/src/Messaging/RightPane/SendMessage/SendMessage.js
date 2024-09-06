@@ -1,10 +1,13 @@
 import React from "react";
 import "../../Styles/messaging.css";
 import { useRef } from "react";
-const SendMessage = ({ socket }) => {
+const SendMessage = ({ socket, friend }) => {
   const input = useRef(null);
   const send = async () => {
-    const text = input.current.value;
+    socket.emit("new_message", {
+      to: friend.username,
+      message: input.current.value,
+    });
   };
   return (
     <div className="card p-2 m-0">

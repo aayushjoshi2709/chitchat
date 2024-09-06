@@ -1,7 +1,7 @@
 const User = require("../models/User/User.model");
 const jwt = require("jsonwebtoken");
 const { StatusCodes } = require("http-status-codes");
-const redisClient = require("../redis/redis");
+const { userRedis } = require("../redis/redis");
 // check if the user is logged in or not
 const isAuthenticated = async (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
@@ -22,7 +22,7 @@ const isAuthenticated = async (req, res, next) => {
 
     if (decoded.username) {
       logger.info("Going to find user in cache: " + decoded.username);
-      const user = await redisClient.get(decoded.username);
+      const user = await userRedis.get(decoded.username);
       if (user) {
         logger.info("User found in cache: " + user.username);
         req.user = JSON.parse(user);
@@ -31,7 +31,7 @@ const isAuthenticated = async (req, res, next) => {
         logger.info(
           "User not found in cache going to hit the db:" + decoded.username
         );
-        await User.findOne({ username: decoded.username })
+        User.findOne({ username: decoded.username })
           .then((user) => {
             if (!user) {
               logger.error("User not found for the token:" + token);
@@ -39,7 +39,7 @@ const isAuthenticated = async (req, res, next) => {
                 .status(StatusCodes.UNAUTHORIZED)
                 .send({ message: "Invalid token" });
             }
-            redisClient.set(decoded.username, JSON.stringify(user));
+            userRedis.set(decoded.username, JSON.stringify(user));
             req.user = user;
             next();
           })
