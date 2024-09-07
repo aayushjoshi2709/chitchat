@@ -30,27 +30,38 @@ function afterConnect(socketObj) {
           }
           user = await userRedis.get(decoded.username);
           if (user) {
-            logger.info("User found in cache: " + user);
+            console.log(user);
+            user = JSON.parse(user);
+            logger.info("User found in cache: " + JSON.stringify(user));
             socket.user = user;
             socketRedis.set(user.username, socket.id);
             next();
           } else {
             logger.info(
-              "User not found in cache going to hit the db:" + user.username
+              "User not found in cache going to hit the db:" + decoded.username
             );
             User.findOne({ username: decoded.username })
+              .select("firstName lastName email username")
+              .exec()
               .then(async (user) => {
                 if (!user) {
-                  logger.error("User not found for the token:" + token);
+                  logger.error(
+                    "User not found for the token:" + decoded.username
+                  );
                   next(new Error("User not found"));
                 }
-                await userRedis.set(decoded.username, user);
+                delete user.password;
+                delete user._id;
+                console.log(user);
+                await userRedis.set(decoded.username, JSON.stringify(user));
                 socket.user = user;
                 socketRedis.set(user.username, socket.id);
                 next();
               })
               .catch((error) => {
-                logger.error("Error while finding user for the token:" + token);
+                logger.error(
+                  "Error while finding user for the token:" + decoded.username
+                );
                 logger.error(error);
                 next(new Error("Something went wrong"));
               });
@@ -63,7 +74,8 @@ function afterConnect(socketObj) {
   });
   socketObj.on("connection", (socket) => {
     socket.on("new_message", async (message) => {
-      const new_message = {
+      logger.info("Received new message: ", message);
+      const messageOutline = {
         from: {
           username: socket.user.username,
         },
@@ -71,17 +83,25 @@ function afterConnect(socketObj) {
         status: "sent",
         time: Date.now(),
       };
-      const friend = userRedis.get(message.to);
+      const friend = JSON.parse(await userRedis.get(message.to));
       if (friend) {
-        new_message.to = {
+        logger.info("Friend found in cache: " + friend);
+        messageOutline.to = {
           username: friend.username,
         };
-        const newMessage = new Message(new_message);
+        console.log("outline:", messageOutline);
+        const newMessage = new Message(messageOutline);
+        logger.info("New message: " + newMessage);
         newMessage
           .save()
           .then((message) => {
+            logger.info("Message saved successfully: " + message);
             friendSocketId = socketRedis.get(friend.username);
             if (friendSocketId) {
+              logger.info(
+                "Going to emit message to the friend on socket id: " +
+                  friendSocketId
+              );
               socketObj.to(friendSocketId).emit("new_message", message);
             }
           })
@@ -89,19 +109,30 @@ function afterConnect(socketObj) {
             logger.error("Error in saving message: " + error);
           });
       } else {
+        logger.info(
+          "Friend not found in cache going to find it in DB: " + message.to
+        );
         User.findOne({ username: message.to }).then((friend) => {
           if (!friend) {
             logger.error("Error in finding friend: " + error);
           } else {
-            message.to = {
+            logger.info("Friend found in db: " + friend);
+            userRedis.set(friend.username, friend);
+            messageOutline.to = {
               username: friend.username,
             };
-            const newMessage = new Message(message);
+            const newMessage = new Message(messageOutline);
+            logger.info("New message: " + newMessage);
             newMessage
               .save()
               .then((message) => {
+                logger.info("Message saved successfully: " + message);
                 const friendSocketId = socketRedis.get(friend.username);
                 if (friendSocketId) {
+                  logger.info(
+                    "Going to emit message to the friend on socket id: " +
+                      friendSocketId
+                  );
                   socketObj.to(friendSocketId).emit("new_message", message);
                 }
               })
@@ -116,13 +147,18 @@ function afterConnect(socketObj) {
       Message.updateMany({ id: { $in: ids } }, { status: "received" }).then(
         (messages) => {
           logger.info("Messagages status updated to received for ids: " + ids);
-          for (let i = 0; i < messages.length; i++) {
-            friendSocketId = socketRedis.get(messages[i].from.username);
-            if (friendSocketId) {
-              socketObj
-                .to(friendSocketId)
-                .emit("update_message_status_received", messages[i]._id);
-            }
+          friendSocketId = socketRedis.get(messages[0].from.username);
+          if (friendSocketId) {
+            logger.info(
+              "Going to emit message to the friend on socket id: " +
+                friendSocketId
+            );
+            socketObj
+              .to(friendSocketId)
+              .emit("update_message_status_received", {
+                friend: socket.user.username,
+                messageIds: ids,
+              });
           }
         }
       );
@@ -136,13 +172,20 @@ function afterConnect(socketObj) {
         socketObj.to(friendSocketId).emit("add_friend", socket.user);
       }
     });
-    socket.on("update_message_status_seen", async (id) => {
-      Message.findByIdAndUpdate(id, { $set: { status: "seen" } }).then(
-        (message) => {
-          logger.info("Message status updated to seen: " + id);
-          friendSocketId = socketRedis.get(message.from.username);
+    socket.on("update_message_status_seen", async (ids) => {
+      Message.updateMany({ id: { $in: ids } }, { status: "seen" }).then(
+        (messages) => {
+          logger.info("Message status updated to seen: " + ids);
+          friendSocketId = socketRedis.get(messages[0].from.username);
           if (friendSocketId) {
-            socketObj.to(friendSocketId).emit("update_message_status_seen", id);
+            logger.info(
+              "Going to emit message to the friend on socket id: " +
+                friendSocketId
+            );
+            socketObj.to(friendSocketId).emit("update_message_status_seen", {
+              friend: socket.user.username,
+              messageIds: ids,
+            });
           }
         }
       );

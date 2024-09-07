@@ -2,12 +2,18 @@ const mongoose = require("mongoose");
 // creating message model with mongoose
 const messageSchema = mongoose.Schema({
   from: {
-    username: String,
+    username: {
+      type: String,
+      required: true,
+    },
   },
   to: {
-    username: String,
+    username: {
+      type: String,
+      required: true,
+    },
   },
-  status: { type: String, default: "NULL" },
+  status: { type: String, default: "sent" },
   time: { type: Date, default: Date.now },
   message: String,
 });

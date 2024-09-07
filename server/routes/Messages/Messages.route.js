@@ -18,9 +18,9 @@ MessagesRouter.get("/", async (req, res) => {
     ],
   })
     .select("from to message time status")
+    .sort({ time: -1 })
     .skip(skip)
     .limit(limit)
-    .sort({ time: 1 })
     .then((messages) => {
       logger.info("Got the messages of length: " + messages.length);
       const response = {};

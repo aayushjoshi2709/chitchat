@@ -1,10 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
 import SentMessage from "./SentMessage/SentMessage";
 import ReceivedMessage from "./ReceivedMessage/ReceivedMessage";
 import Styles from "./messages.module.css";
+import { useRef } from "react";
 const Messages = ({ messageData, getTime, socket, user }) => {
+  const messagesRef = useRef(null);
+  useEffect(() => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  }, [messageData]);
   return (
-    <div className={Styles.messages}>
+    <div ref={messagesRef} className={Styles.messages}>
       {messageData
         ? messageData.map(function (message) {
             return message.from.username === user.username ? (

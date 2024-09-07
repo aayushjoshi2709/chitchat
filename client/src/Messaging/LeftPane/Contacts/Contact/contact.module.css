@@ -13,6 +13,11 @@
 .nameContact p{
     margin: 0;
     padding: 0;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow: hidden;
+    height: 1.2em;
+    text-overflow: ellipsis;
 }
 
 .avatar{

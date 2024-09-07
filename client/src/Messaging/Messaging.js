@@ -13,7 +13,8 @@ const Messaging = ({ JWTToken, axios }) => {
   const [messages, setMessages] = useState({});
   const [isRightOn, setIsRightOn] = useState(false);
   const [friendusername, setFriendUserName] = useState("");
-
+  const [searchedFriendText, setSearchedFriendText] = useState("");
+  const [searchedFriends, setSearchedFriends] = useState([]);
   // disconnect socket when when window/browser/site is closed
   window.addEventListener("onbeforeunload", function (e) {
     if (socket) socket.disconnect();
@@ -105,8 +106,8 @@ const Messaging = ({ JWTToken, axios }) => {
 
   // check for recived messages
   function checkRecieved() {
-    const ids = [];
     for (let key in messages) {
+      const ids = [];
       let count = 0;
       messages[key].forEach(function (message) {
         if (
@@ -121,14 +122,35 @@ const Messaging = ({ JWTToken, axios }) => {
         }
       });
       messages[key].received = count;
-    }
-    if (ids.length > 0) {
-      socket.emit("update_message_status_received", ids);
+      if (ids.length > 0) {
+        socket.emit("update_message_status_received", ids);
+      }
     }
   }
   useEffect(() => {
     checkRecieved();
   }, [messages]);
+
+  useEffect(() => {
+    if (searchedFriendText.length > 0) {
+      const friendsFound = Object.keys(friends).filter((friendUserName) => {
+        if (friendUserName.includes(searchedFriendText)) return true;
+        const fullname =
+          friends[friendUserName].firstName +
+          " " +
+          friends[friendUserName].lastName;
+        return fullname.includes(searchedFriendText);
+      });
+
+      if (friendsFound.length > 0) {
+        setSearchedFriends(friendsFound);
+      } else {
+        setSearchedFriends([]);
+      }
+    } else {
+      setSearchedFriends([]);
+    }
+  }, [searchedFriendText]);
 
   return (
     <>
@@ -140,6 +162,8 @@ const Messaging = ({ JWTToken, axios }) => {
             getTime={getTime}
             loadMessages={loadMessages}
             friends={friends}
+            setSearchedFriendText={setSearchedFriendText}
+            searchedFriends={searchedFriends}
           />
           {isRightOn ? (
             <RPane

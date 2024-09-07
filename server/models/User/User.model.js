@@ -14,12 +14,6 @@ const UserSchema = mongoose.Schema({
     required: true,
   },
   image: String,
-  messages: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-    },
-  ],
   friends: [
     {
       type: mongoose.Schema.Types.ObjectId,

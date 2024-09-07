@@ -1,21 +1,48 @@
 import React from "react";
 import Contact from "./Contact/Contact";
 import styles from "./contacts.module.css";
-function Contacts({ messages, friends, getTime, loadMessages }) {
+function Contacts({
+  messages,
+  friends,
+  getTime,
+  loadMessages,
+  searchedFriends,
+}) {
   return (
     <div className={styles.contacts}>
-      {Object.keys(messages).map((index) => {
-        return (
-          <Contact
-            getTime={getTime}
-            key={index}
-            friendUsername={index}
-            contact={friends[index]}
-            lastMessage={messages[index][messages[index].length - 1]}
-            loadMessages={loadMessages}
-          />
-        );
-      })}
+      {searchedFriends && searchedFriends.length > 0
+        ? searchedFriends.map((friendUserName) => {
+            return (
+              <Contact
+                getTime={getTime}
+                key={friendUserName}
+                friendUsername={friendUserName}
+                contact={friends[friendUserName]}
+                lastMessage={
+                  messages[friendUserName]
+                    ? messages[friendUserName][
+                        messages[friendUserName].length - 1
+                      ]
+                    : null
+                }
+                loadMessages={loadMessages}
+              />
+            );
+          })
+        : Object.keys(messages).map((friendUserName) => {
+            return (
+              <Contact
+                getTime={getTime}
+                key={friendUserName}
+                friendUsername={friendUserName}
+                contact={friends[friendUserName]}
+                lastMessage={
+                  messages[friendUserName][messages[friendUserName].length - 1]
+                }
+                loadMessages={loadMessages}
+              />
+            );
+          })}
     </div>
   );
 }

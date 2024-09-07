@@ -1,5 +1,5 @@
 import React from "react";
-
+import styles from "./receivedMessage.module.css";
 const ReceivedMessage = ({ message, getTime, socket }) => {
   if (
     message.status &&
@@ -11,7 +11,9 @@ const ReceivedMessage = ({ message, getTime, socket }) => {
   return (
     <div className="d-flex justify-content-start">
       <div className="card msg bg-light p-1 m-1 rounded">
-        <div>{message.message}</div>
+        <div>
+          <p className={styles.messagePara}>{message.message}</p>
+        </div>
         <div
           id={message.id}
           className="text-muted text-end"

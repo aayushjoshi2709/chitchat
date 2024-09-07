@@ -1,10 +1,12 @@
 import React from "react";
-
+import style from "./sentMessage.module.css";
 const SentMessage = ({ message, getTime }) => {
   return (
     <div className="d-flex justify-content-end">
       <div className="card msg color-green p-1 m-1 rounded">
-        <div>{message.message}</div>
+        <div>
+          <p className={style.messagePara}>{message.message}</p>
+        </div>
         <div
           id={message.id}
           className="text-muted text-end"

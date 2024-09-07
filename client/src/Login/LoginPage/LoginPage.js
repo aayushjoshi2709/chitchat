@@ -28,6 +28,7 @@ function LoginPage({ setJWTToken }) {
         }
       })
       .catch((error) => {
+        console.log(error.response);
         toast.error(error.response.data.message);
       });
   };

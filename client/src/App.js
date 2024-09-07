@@ -36,6 +36,7 @@ const App = () => {
         setJWTToken("");
         redirect("/login");
       }
+      return Promise.reject(error);
     }
   );
 
