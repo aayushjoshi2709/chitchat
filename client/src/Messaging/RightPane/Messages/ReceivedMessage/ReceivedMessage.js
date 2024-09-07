@@ -5,7 +5,7 @@ const ReceivedMessage = ({ message, getTime, socket }) => {
     message.status &&
     (message.status === "received" || message.status === "sent")
   ) {
-    socket.emit("update_message_status_seen", message.id);
+    socket.emit("update_message_status_seen", message._id);
     message.status = "seen";
   }
   return (

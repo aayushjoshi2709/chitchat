@@ -9,7 +9,7 @@ const dtoValidator = require("../../middlewares/dtoValidator.middleware");
 MessagesRouter.get("/", async (req, res) => {
   const logger = req.logger;
   logger.info("Getting all messages for user: " + req.user.username);
-  limit = req.query.limit || 10000;
+  limit = req.query.limit || 1000;
   skip = req.query.skip || 0;
   Message.find({
     $or: [
@@ -22,7 +22,7 @@ MessagesRouter.get("/", async (req, res) => {
     .limit(limit)
     .sort({ time: 1 })
     .then((messages) => {
-      logger.info("Got the messages: " + messages);
+      logger.info("Got the messages of length: " + messages.length);
       const response = {};
       messages.map((message) => {
         if (message.from.username == req.user.username) {
@@ -43,7 +43,7 @@ MessagesRouter.get("/", async (req, res) => {
 // get messages with a particular user
 MessagesRouter.get("/:username", async (req, res) => {
   logger = req.logger;
-  limit = req.query.limit || 500;
+  limit = req.query.limit || 100;
   skip = req.query.skip || 0;
   logger.info("Getting messages with user: " + req.params.username);
   User.findOne({ username: req.params.username }).then((user) => {
@@ -72,56 +72,5 @@ MessagesRouter.get("/:username", async (req, res) => {
     }
   });
 });
-
-// create message route
-MessagesRouter.post(
-  "/",
-  [isAuthenticated, dtoValidator(MessageDto, "body")],
-  async (req, res) => {
-    const logger = req.logger;
-    logger.info("Going to create a new message");
-    var message = {
-      from: {
-        username: req.user.username,
-      },
-      time: req.body.time || Date.now(),
-      status: "sent",
-      message: req.body.message,
-    };
-    logger.debug("Message: " + message);
-    User.findOne({ username: req.body.to })
-      .then((user) => {
-        if (!user) {
-          return res
-            .send(
-              JSON.stringify({
-                error: "Destination user not found",
-              })
-            )
-            .status(StatusCodes.BAD_REQUEST);
-        }
-        message.to = {
-          username: user.username,
-        };
-        Message.create(message)
-          .then((message) => {
-            res.send(JSON.stringify({ message: "Message sent" }));
-          })
-          .catch((error) => {
-            logger.error("Error in updating to from user: " + error);
-          });
-      })
-      .catch((error) => {
-        logger.error("Error in finding destination user: " + error);
-        res
-          .send(
-            JSON.stringify({
-              error: "Error finding destination user",
-            })
-          )
-          .status(StatusCodes.INTERNAL_SERVER_ERROR);
-      });
-  }
-);
 
 module.exports = MessagesRouter;

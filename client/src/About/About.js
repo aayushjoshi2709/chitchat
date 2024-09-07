@@ -3,8 +3,7 @@ import RightPane from "./RightPane/RightPane";
 import LeftPane from "./LeftPane/LeftPane";
 import Styles from "./about.module.css";
 import { useState, useEffect } from "react";
-import axios from "axios";
-function About({ JWTToken, setJWTToken }) {
+function About({ JWTToken, setJWTToken, axios }) {
   // logout function
   const logOut = function () {
     localStorage.removeItem("token");
@@ -32,8 +31,14 @@ function About({ JWTToken, setJWTToken }) {
     <div className={Styles.topContainer}>
       <div className={Styles.header}></div>
       <div className={Styles.mainContainer}>
-        <LeftPane JWTToken={JWTToken} setUser={setUser} user={user} logOut={logOut} />
-        <RightPane user={user} JWTToken={JWTToken} />
+        <LeftPane
+          JWTToken={JWTToken}
+          setUser={setUser}
+          user={user}
+          logOut={logOut}
+          axios={axios}
+        />
+        <RightPane user={user} JWTToken={JWTToken} axios={axios} />
       </div>
     </div>
   );

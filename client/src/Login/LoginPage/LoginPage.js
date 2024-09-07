@@ -17,7 +17,6 @@ function LoginPage({ setJWTToken }) {
         password: pass,
       })
       .then((response) => {
-        console.log(response.status);
         if (response.status === 200) {
           const token = response.data.token;
           if (token) {

@@ -3,11 +3,13 @@ import "../../Styles/messaging.css";
 import { useRef } from "react";
 const SendMessage = ({ socket, friend }) => {
   const input = useRef(null);
-  const send = async () => {
+  const send = () => {
+    console.log("Sending message to: ", friend.username);
     socket.emit("new_message", {
       to: friend.username,
       message: input.current.value,
     });
+    input.current.value = "";
   };
   return (
     <div className="card p-2 m-0">
@@ -21,7 +23,9 @@ const SendMessage = ({ socket, friend }) => {
             placeholder="Enter the text to be sent..."
           ></input>
           <button
-            onClick={() => send()}
+            onClick={() => {
+              send();
+            }}
             className="btn btn-success float-right"
           >
             Send

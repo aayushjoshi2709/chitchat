@@ -3,7 +3,6 @@ import SentMessage from "./SentMessage/SentMessage";
 import ReceivedMessage from "./ReceivedMessage/ReceivedMessage";
 import Styles from "./messages.module.css";
 const Messages = ({ messageData, getTime, socket, user }) => {
-  console.table(messageData);
   return (
     <div className={Styles.messages}>
       {messageData

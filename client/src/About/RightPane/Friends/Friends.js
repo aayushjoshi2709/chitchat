@@ -1,8 +1,8 @@
 import React from "react";
 
-const Friends = ({ friends, JWTToken }) => {
+const Friends = ({ friends, JWTToken, axios }) => {
   const removeFriend = (username) => {
-    fetch(`/friends/${username}`, {
+    axios(`/friends/${username}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${JWTToken}`,

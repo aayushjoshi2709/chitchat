@@ -1,13 +1,4 @@
 var socket = io.connect();
-socket.on("connect", function () {
-  // Send emit user id right after connect
-  socket.emit("user", user_id);
-});
-
-// disconnect socket when when window/browser/site is closed
-window.addEventListener("onbeforeunload", function (e) {
-  socket.disconnect();
-});
 
 // function to be triggered if user recieves seen event
 socket.on("update_message_status_seen", function (id) {

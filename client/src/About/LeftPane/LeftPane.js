@@ -1,8 +1,7 @@
-import axios from "axios";
 import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-const LeftPane = ({ setUser, user, logOut, JWTToken }) => {
+const LeftPane = ({ setUser, user, logOut, JWTToken, axios }) => {
   const [updatedImage, setUpdatedImage] = useState("");
   const imageRef = useRef(null);
   const fileInputRef = useRef(null);

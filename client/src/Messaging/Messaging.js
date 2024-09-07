@@ -4,9 +4,86 @@ import RPane from "./RightPane/RightPane";
 import { useState, useEffect } from "react";
 import "./Styles/messaging.css";
 import styles from "./messaging.module.css";
-const Messaging = ({ friends, messages, user, socket, JWTToken }) => {
+import io from "socket.io-client";
+
+const Messaging = ({ JWTToken, axios }) => {
+  const [socket, setSocket] = useState(null);
+  const [user, setUser] = useState(null);
+  const [friends, setFriends] = useState({});
+  const [messages, setMessages] = useState({});
   const [isRightOn, setIsRightOn] = useState(false);
   const [friendusername, setFriendUserName] = useState("");
+
+  // disconnect socket when when window/browser/site is closed
+  window.addEventListener("onbeforeunload", function (e) {
+    if (socket) socket.disconnect();
+  });
+
+  // get messages function
+  const getMessages = async () => {
+    axios
+      .get("/messages", {
+        headers: {
+          Authorization: `Bearer ${JWTToken}`,
+        },
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          setMessages(response.data);
+        }
+      });
+  };
+  // const get friends
+  const getFriends = async () => {
+    axios
+      .get(`/friends`, {
+        headers: {
+          Authorization: `Bearer ${JWTToken}`,
+        },
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          const friendMap = {};
+          response.data.forEach((friend) => {
+            friendMap[friend.username] = friend;
+          });
+          setFriends(friendMap);
+        }
+      });
+  };
+
+  // get user function
+  const getUser = async () => {
+    axios
+      .get(`/user`, {
+        headers: {
+          Authorization: `Bearer ${JWTToken}`,
+        },
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          setUser(response.data);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+  useEffect(async () => {
+    if (JWTToken && JWTToken !== "") {
+      await getUser();
+      await getFriends();
+      await getMessages();
+      const socket_conn = io("http://127.0.0.1:5000", {
+        query: { token: JWTToken },
+      }).connect({
+        transports: ["websocket"],
+        reconnection: true,
+        reconnectionDelay: 1000,
+      });
+      setSocket(socket_conn);
+    }
+  }, [JWTToken]);
   function getTime(str) {
     let today = new Date(str);
     let hour =
@@ -25,6 +102,33 @@ const Messaging = ({ friends, messages, user, socket, JWTToken }) => {
       setIsRightOn(true);
     }
   }, [friendusername]);
+
+  // check for recived messages
+  function checkRecieved() {
+    const ids = [];
+    for (let key in messages) {
+      let count = 0;
+      messages[key].forEach(function (message) {
+        if (
+          message.status &&
+          message.status === "sent" &&
+          message.to.username === user.username &&
+          socket != null
+        ) {
+          ids.push(message._id);
+          message.status = "received";
+          count++;
+        }
+      });
+      messages[key].received = count;
+    }
+    if (ids.length > 0) {
+      socket.emit("update_message_status_received", ids);
+    }
+  }
+  useEffect(() => {
+    checkRecieved();
+  }, [messages]);
 
   return (
     <>

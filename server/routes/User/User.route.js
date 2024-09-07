@@ -16,7 +16,6 @@ userRouter.get("/", isAuthenticated, async (req, res) => {
 
 userRouter.get("/about", isAuthenticated, async (req, res) => {
   const logger = req.logger;
-  console.log("Here is req user: ", req.user);
   User.findById(req.user._id)
     .select("firstName lastName email username image friends -_id")
     .populate({
