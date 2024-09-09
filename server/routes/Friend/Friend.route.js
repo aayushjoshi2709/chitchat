@@ -2,7 +2,7 @@ const friendRouter = require("express").Router();
 const { StatusCodes } = require("http-status-codes");
 const logger = require("../../logger/logger");
 const User = require("../../models/User/User.model");
-const { userRedis } = require("../../redis/redis");
+const { userCache } = require("../../redis/redis");
 
 // create new friend route
 friendRouter.put("/", async (req, res) => {
@@ -36,7 +36,7 @@ friendRouter.put("/", async (req, res) => {
       })
         .exec()
         .then((user) => {
-          userRedis.del(user.username);
+          userCache.del(user.username);
           logger.info("User updated successfully");
         })
         .catch((error) => {
@@ -49,7 +49,7 @@ friendRouter.put("/", async (req, res) => {
       logger.info("Adding user to friend's friend list");
       friend.friends.push(user._id);
       friend.save();
-      userRedis.del(friend.username);
+      userCache.del(friend.username);
       return res
         .send(JSON.stringify({ message: "Friend added successfully" }))
         .status(StatusCodes.ACCEPTED);
@@ -104,7 +104,7 @@ friendRouter.delete("/:username", async (req, res) => {
           (friendsFriendIds) => !friendsFriendIds.equals(user._id)
         );
         friend.save();
-        userRedis.del(friend.username);
+        userCache.del(friend.username);
       } else {
         logger.info("There are no friends associated with: " + friend.username);
         logger.debug("User:", JSON.stringify(friend));
@@ -115,7 +115,7 @@ friendRouter.delete("/:username", async (req, res) => {
         );
         User.findByIdAndUpdate(user._id, { $set: { friends: newFriendsArray } })
           .then((user) => {
-            userRedis.del(user.username);
+            userCache.del(user.username);
             logger.info("Removed friend from user: " + req.params.username);
           })
           .catch((error) => {

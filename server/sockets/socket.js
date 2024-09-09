@@ -1,7 +1,7 @@
 const socket = require("socket.io");
 const User = require("../models/User/User.model");
 const Message = require("../models/Messages/Messages.model");
-const { userRedis, socketRedis } = require("../redis/redis");
+const { userCache, socketCache } = require("../redis/redis");
 const jwt = require("jsonwebtoken");
 const logger = require("../logger/logger");
 require("dotenv").config();
@@ -28,13 +28,13 @@ function afterConnect(socketObj) {
           if (err) {
             return next(new Error("Authentication error"));
           }
-          user = await userRedis.get(decoded.username);
+          user = await userCache.get(decoded.username);
           if (user) {
             console.log(user);
             user = JSON.parse(user);
             logger.info("User found in cache: " + JSON.stringify(user));
             socket.user = user;
-            socketRedis.set(user.username, socket.id);
+            socketCache.set(user.username, socket.id);
             next();
           } else {
             logger.info(
@@ -51,9 +51,9 @@ function afterConnect(socketObj) {
                   next(new Error("User not found"));
                 }
                 delete user.password;
-                await userRedis.set(decoded.username, JSON.stringify(user));
+                await userCache.set(decoded.username, JSON.stringify(user));
                 socket.user = user;
-                socketRedis.set(user.username, socket.id);
+                socketCache.set(user.username, socket.id);
                 next();
               })
               .catch((error) => {
@@ -81,7 +81,7 @@ function afterConnect(socketObj) {
         status: "sent",
         time: Date.now(),
       };
-      const friend = JSON.parse(await userRedis.get(message.to));
+      const friend = JSON.parse(await userCache.get(message.to));
       if (friend) {
         if (!socket.user.friends.includes(friend._id)) {
           logger.error("User is not friend with the receiver");
@@ -97,7 +97,7 @@ function afterConnect(socketObj) {
           .save()
           .then((message) => {
             logger.info("Message saved successfully: " + message);
-            friendSocketId = socketRedis.get(friend.username);
+            friendSocketId = socketCache.get(friend.username);
             if (friendSocketId) {
               logger.info(
                 "Going to emit message to the friend on socket id: " +
@@ -122,7 +122,7 @@ function afterConnect(socketObj) {
               return;
             }
             logger.info("Friend found in db: " + friend);
-            userRedis.set(friend.username, friend);
+            userCache.set(friend.username, friend);
             messageOutline.to = {
               username: friend.username,
             };
@@ -132,7 +132,7 @@ function afterConnect(socketObj) {
               .save()
               .then((message) => {
                 logger.info("Message saved successfully: " + message);
-                const friendSocketId = socketRedis.get(friend.username);
+                const friendSocketId = socketCache.get(friend.username);
                 if (friendSocketId) {
                   logger.info(
                     "Going to emit message to the friend on socket id: " +
@@ -152,7 +152,7 @@ function afterConnect(socketObj) {
       Message.updateMany({ id: { $in: ids } }, { status: "received" }).then(
         (messages) => {
           logger.info("Messagages status updated to received for ids: " + ids);
-          friendSocketId = socketRedis.get(messages[0].from.username);
+          friendSocketId = socketCache.get(messages[0].from.username);
           if (friendSocketId) {
             logger.info(
               "Going to emit message to the friend on socket id: " +
@@ -169,7 +169,7 @@ function afterConnect(socketObj) {
       );
     });
     socket.on("add_friend", function (id) {
-      const friendSocketId = socketRedis.get(id);
+      const friendSocketId = socketCache.get(id);
       if (friendSocketId) {
         const user = socket.user.copy();
         delete user._id;
@@ -181,7 +181,7 @@ function afterConnect(socketObj) {
       Message.updateMany({ id: { $in: ids } }, { status: "seen" }).then(
         (messages) => {
           logger.info("Message status updated to seen: " + ids);
-          friendSocketId = socketRedis.get(messages[0].from.username);
+          friendSocketId = socketCache.get(messages[0].from.username);
           if (friendSocketId) {
             logger.info(
               "Going to emit message to the friend on socket id: " +
@@ -197,7 +197,7 @@ function afterConnect(socketObj) {
     });
     socket.on("disconnect", function (username) {
       logger.info("User disconnected: " + username);
-      socketRedis.del(socket.user.username);
+      socketCache.del(socket.user.username);
     });
   });
 }

@@ -3,7 +3,7 @@ const userRouter = require("express").Router();
 const multerUpload = require("../../middlewares/multer.middleware");
 const { StatusCodes } = require("http-status-codes");
 const isAuthenticated = require("../../middlewares/isAuthenticated.middleware");
-const { userRedis } = require("../../redis/redis");
+const { userCache } = require("../../redis/redis");
 userRouter.get("/", isAuthenticated, async (req, res) => {
   logger = req.logger;
   logger.info("Getting user details");
@@ -65,7 +65,7 @@ userRouter.post(
         logger.info(
           "Going to delete user object from cache for: " + req.user.username
         );
-        userRedis.del(req.user.username);
+        userCache.del(req.user.username);
         res.send({
           message: "Successfully updated the profile picture",
           image: req.file.path,

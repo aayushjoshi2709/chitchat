@@ -2,13 +2,13 @@ const redis = require("ioredis");
 const logger = require("../logger/logger");
 require("dotenv").config();
 
-const userRedis = redis.createClient({
+const userCache = redis.createClient({
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
   db: 0,
 });
 
-const socketRedis = redis.createClient({
+const socketCache = redis.createClient({
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
   db: 1,
@@ -44,6 +44,6 @@ function checkConnection(redisClient) {
     });
 }
 
-checkConnection(userRedis);
-checkConnection(socketRedis);
-module.exports = { userRedis, socketRedis };
+checkConnection(userCache);
+checkConnection(socketCache);
+module.exports = { userCache, socketCache };
