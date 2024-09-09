@@ -147,7 +147,7 @@ friendRouter.get("/search/:username", async (req, res) => {
   logger.info("Going to search for friends: " + username);
   User.find({ username: { $regex: username, $options: "i" } })
     .limit(5)
-    .select("firstName lastName email username image -_id")
+    .select("-password -friends -_id")
     .exec()
     .then((users) => {
       if (!users) {

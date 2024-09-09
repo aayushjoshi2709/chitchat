@@ -17,10 +17,10 @@ userRouter.get("/", isAuthenticated, async (req, res) => {
 userRouter.get("/about", isAuthenticated, async (req, res) => {
   const logger = req.logger;
   User.findById(req.user._id)
-    .select("firstName lastName email username image friends -_id")
+    .select("-password -_id")
     .populate({
       path: "friends",
-      select: "firstName lastName email username image -_id",
+      select: "-friends -password -_id",
     })
     .exec()
     .then((user) => {
