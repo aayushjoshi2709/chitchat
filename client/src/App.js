@@ -11,23 +11,40 @@ import Messaging from "./Messaging/Messaging";
 import Login from "./Login/Login";
 import About from "./About/About";
 import axios from "axios";
+import io from "socket.io-client";
 import "./App.css";
 const App = () => {
   // states to store data for the user
   const [JWTToken, setJWTToken] = useState("");
+  const [socket, setSocket] = useState(null);
+  // disconnect socket when when window/browser/site is closed
+  window.addEventListener("onbeforeunload", function (e) {
+    if (socket) socket.disconnect();
+  });
+
   axios.defaults.baseURL = "http://localhost:5000";
   // sign up function
   useEffect(async () => {
-    console.log(JWTToken);
     if (JWTToken === "") {
       const token = await localStorage.getItem("token");
       if (token) {
         setJWTToken(token);
       } else {
         redirect("/login");
+        if (socket) {
+          socket.disconnect();
+        }
       }
     } else {
       axios.defaults.headers.common["Authorization"] = `Bearer ${JWTToken}`;
+      const socket_conn = io("http://127.0.0.1:5000", {
+        query: { token: JWTToken },
+      }).connect({
+        transports: ["websocket"],
+        reconnection: true,
+        reconnectionDelay: 1000,
+      });
+      setSocket(socket_conn);
     }
   }, [JWTToken]);
 
@@ -62,6 +79,7 @@ const App = () => {
               JWTToken={JWTToken}
               setJWTToken={setJWTToken}
               axios={axios}
+              socket={socket}
             />
           }
         />
@@ -73,6 +91,7 @@ const App = () => {
         <Route
           exact
           path="/about"
+          socket={socket}
           element={<About setJWTToken={setJWTToken} axios={axios} />}
         />
       </Routes>

@@ -1,5 +1,6 @@
 const express = require("express"),
   app = express(),
+  socketEvents = require("./sockets/events"),
   mongoose = require("mongoose"),
   bodyParser = require("body-parser"),
   passport = require("passport"),
@@ -11,9 +12,9 @@ const express = require("express"),
   isAuthenticated = require("./middlewares/isAuthenticated.middleware"),
   MessagesRouter = require("./routes/Messages/Messages.route"),
   FriendRouter = require("./routes/Friend/Friend.route"),
-  { EstablishSocket, afterConnect } = require("./sockets/socket"),
-  cors = require("cors");
-app.use(methodOverride("_method"));
+  { socketInstance } = require("./sockets/socket"),
+  socketAuthenticated = require("./middlewares/socketAuthenticated.middleware");
+cors = require("cors");
 require("dotenv").config();
 
 // set app to use cors
@@ -37,9 +38,9 @@ mongoose.connect(process.env.DATABASE_URI, {
 
 // configuring socket.io
 const http = require("http").Server(app);
-socketObj = EstablishSocket(http);
-afterConnect(socketObj);
-
+socketInstance.establishSocket(http);
+socketInstance.addMiddleware(socketAuthenticated);
+socketInstance.addEvent("connection", socketEvents.connection);
 http.listen(process.env.PORT, function () {
   logger.info("App started in port: " + process.env.PORT);
 });

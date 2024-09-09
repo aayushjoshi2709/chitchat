@@ -1,11 +1,76 @@
 const MessagesRouter = require("express").Router();
 const { StatusCodes } = require("http-status-codes");
-const isAuthenticated = require("../../middlewares/isAuthenticated.middleware");
 const User = require("../../models/User/User.model");
 const Message = require("../../models/Messages/Messages.model");
 const MessageDto = require("../../dtos/Message.dto");
 const dtoValidator = require("../../middlewares/dtoValidator.middleware");
+const { userCache, socketCache } = require("../../redis/redis");
+const { socketInstance } = require("../../sockets/socket");
 // get all messages route
+
+MessagesRouter.post("/", dtoValidator(MessageDto, "body"), async (req, res) => {
+  const logger = req.logger;
+  logger.info("Received new message: ", req.body);
+  const friend = JSON.parse(await userCache.get(req.body.to));
+  if (friend) {
+    logger.info("Friend found in cache: " + friend);
+  } else {
+    try {
+      friend = await User.findOne({ username: req.body.to });
+    } catch (error) {
+      logger.error("Error in finding friend: " + error);
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .send({ message: "Error finding friend" });
+    }
+    if (!friend) {
+      logger.error("Error in finding friend: " + error);
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .send({ message: "Error finding friend" });
+    }
+    await userCache.set(friend.username, JSON.stringify(friend));
+  }
+  if (!req.user.friends.includes(friend._id)) {
+    logger.error("User is not friend with the receiver");
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .send({ message: "User is not friend with the receiver" });
+  }
+  const newMessage = new Message({
+    from: {
+      username: req.user.username,
+    },
+    to: {
+      username: req.body.to,
+    },
+    message: req.body.message,
+    status: "sent",
+    time: Date.now(),
+  });
+  logger.info("New message: " + newMessage);
+  newMessage
+    .save()
+    .then(async (message) => {
+      logger.info("Message saved successfully: " + message);
+      socketCache.get(friend.username).then((friendSocketId) => {
+        if (friendSocketId) {
+          logger.info(
+            "Going to emit message to the friend on socket id: " +
+              friendSocketId
+          );
+          socketInstance.emitEvent(friendSocketId, "new_message", message);
+          return res.status(StatusCodes.ACCEPTED).send({
+            message: "Message sent successfully",
+          });
+        }
+      });
+    })
+    .catch((error) => {
+      logger.error("Error in saving message: " + error);
+    });
+});
+
 MessagesRouter.get("/", async (req, res) => {
   const logger = req.logger;
   logger.info("Getting all messages for user: " + req.user.username);

@@ -7,6 +7,8 @@ const LoginDto = require("../../dtos/Login.dto");
 const jwt = require("jsonwebtoken");
 const dtoValidator = require("../../middlewares/dtoValidator.middleware");
 const { userCache } = require("../../redis/redis");
+const { socketInstance } = require("../../sockets/socket");
+
 async function hashPassword(password) {
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);

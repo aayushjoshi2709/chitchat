@@ -4,10 +4,8 @@ import RPane from "./RightPane/RightPane";
 import { useState, useEffect } from "react";
 import "./Styles/messaging.css";
 import styles from "./messaging.module.css";
-import io from "socket.io-client";
 
-const Messaging = ({ JWTToken, axios }) => {
-  const [socket, setSocket] = useState(null);
+const Messaging = ({ JWTToken, axios, socket }) => {
   const [user, setUser] = useState(null);
   const [friends, setFriends] = useState({});
   const [messages, setMessages] = useState({});
@@ -15,10 +13,6 @@ const Messaging = ({ JWTToken, axios }) => {
   const [friendusername, setFriendUserName] = useState("");
   const [searchedFriendText, setSearchedFriendText] = useState("");
   const [searchedFriends, setSearchedFriends] = useState([]);
-  // disconnect socket when when window/browser/site is closed
-  window.addEventListener("onbeforeunload", function (e) {
-    if (socket) socket.disconnect();
-  });
 
   // get messages function
   const getMessages = async () => {
@@ -59,14 +53,6 @@ const Messaging = ({ JWTToken, axios }) => {
       await getUser();
       await getFriends();
       await getMessages();
-      const socket_conn = io("http://127.0.0.1:5000", {
-        query: { token: JWTToken },
-      }).connect({
-        transports: ["websocket"],
-        reconnection: true,
-        reconnectionDelay: 1000,
-      });
-      setSocket(socket_conn);
     }
   }, [JWTToken]);
   function getTime(str) {
@@ -136,7 +122,15 @@ const Messaging = ({ JWTToken, axios }) => {
       setSearchedFriends([]);
     }
   }, [searchedFriendText]);
-
+  useEffect(() => {
+    if (socket) {
+      socket.on("add_friend", (friend) => {
+        setFriends((prev) => {
+          return { ...prev, [friend.username]: friend };
+        });
+      });
+    }
+  }, [socket]);
   return (
     <>
       <div className={styles.topContainer}>

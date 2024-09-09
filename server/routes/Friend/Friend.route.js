@@ -2,8 +2,8 @@ const friendRouter = require("express").Router();
 const { StatusCodes } = require("http-status-codes");
 const logger = require("../../logger/logger");
 const User = require("../../models/User/User.model");
-const { userCache } = require("../../redis/redis");
-
+const { userCache, socketCache } = require("../../redis/redis");
+const { socketInstance } = require("../../sockets/socket");
 // create new friend route
 friendRouter.put("/", async (req, res) => {
   const logger = req.logger;
@@ -50,6 +50,11 @@ friendRouter.put("/", async (req, res) => {
       friend.friends.push(user._id);
       friend.save();
       userCache.del(friend.username);
+      friendSocketId = socketCache.get(friend.username);
+      if (friendSocketId) {
+        logger.info("Emitting new friend event to friend: " + friend.username);
+        socketInstance.emitEvent(friendSocketId, "add_friend", req.user);
+      }
       return res
         .send(JSON.stringify({ message: "Friend added successfully" }))
         .status(StatusCodes.ACCEPTED);
@@ -127,6 +132,11 @@ friendRouter.delete("/:username", async (req, res) => {
       } else {
         logger.info("There are no friends associated with: " + user.username);
         logger.info("User:" + JSON.stringify(user));
+      }
+      friendSocketId = socketCache.get(friend.username);
+      if (friendSocketId) {
+        logger.info("Emitting new friend event to friend: " + friend.username);
+        socketInstance.emitEvent(friendSocketId, "remove_friend", req.user);
       }
       return res
         .send(JSON.stringify({ message: "Friend removed successfully" }))
