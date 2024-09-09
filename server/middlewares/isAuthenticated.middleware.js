@@ -24,7 +24,7 @@ const isAuthenticated = async (req, res, next) => {
       logger.info("Going to find user in cache: " + decoded.username);
       const user = await userRedis.get(decoded.username);
       if (user) {
-        logger.info("User found in cache: " + user.username);
+        logger.info("User found in cache: " + user);
         req.user = JSON.parse(user);
         next();
       } else {
@@ -40,7 +40,7 @@ const isAuthenticated = async (req, res, next) => {
                 .send({ message: "Invalid token" });
             }
             userRedis.set(decoded.username, JSON.stringify(user));
-            req.user = user;
+            req.user = user.toObject();
             next();
           })
           .catch((error) => {

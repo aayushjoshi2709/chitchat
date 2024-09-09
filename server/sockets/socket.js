@@ -41,7 +41,7 @@ function afterConnect(socketObj) {
               "User not found in cache going to hit the db:" + decoded.username
             );
             User.findOne({ username: decoded.username })
-              .select("firstName lastName email username")
+              .select("-password")
               .exec()
               .then(async (user) => {
                 if (!user) {
@@ -51,8 +51,6 @@ function afterConnect(socketObj) {
                   next(new Error("User not found"));
                 }
                 delete user.password;
-                delete user._id;
-                console.log(user);
                 await userRedis.set(decoded.username, JSON.stringify(user));
                 socket.user = user;
                 socketRedis.set(user.username, socket.id);
@@ -85,11 +83,14 @@ function afterConnect(socketObj) {
       };
       const friend = JSON.parse(await userRedis.get(message.to));
       if (friend) {
+        if (!socket.user.friends.includes(friend._id)) {
+          logger.error("User is not friend with the receiver");
+          return;
+        }
         logger.info("Friend found in cache: " + friend);
         messageOutline.to = {
           username: friend.username,
         };
-        console.log("outline:", messageOutline);
         const newMessage = new Message(messageOutline);
         logger.info("New message: " + newMessage);
         newMessage
@@ -116,6 +117,10 @@ function afterConnect(socketObj) {
           if (!friend) {
             logger.error("Error in finding friend: " + error);
           } else {
+            if (!socket.user.friends.includes(friend._id)) {
+              logger.error("User is not friend with the receiver");
+              return;
+            }
             logger.info("Friend found in db: " + friend);
             userRedis.set(friend.username, friend);
             messageOutline.to = {

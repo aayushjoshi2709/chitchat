@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-const LeftPane = ({ setUser, user, logOut, JWTToken, axios }) => {
+const LeftPane = ({ setUser, user, logOut, axios }) => {
   const [updatedImage, setUpdatedImage] = useState("");
   const imageRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -22,12 +22,7 @@ const LeftPane = ({ setUser, user, logOut, JWTToken, axios }) => {
       const formData = new FormData();
       formData.append("image", file);
       axios
-        .post("/user/image", formData, {
-          headers: {
-            Authorization: `Bearer ${JWTToken}`,
-            "Content-Type": "multipart/form-data",
-          },
-        })
+        .post("/user/image", formData)
         .then((res) => {
           if (res.status === 200) {
             toast.success(res.data.message);
@@ -41,7 +36,7 @@ const LeftPane = ({ setUser, user, logOut, JWTToken, axios }) => {
   };
   return (
     <div className="col-md-4 h-100 py-5 d-flex justify-content-center">
-      <Toaster />
+      <Toaster position="botton-center" />
       <div className=" mx-auto text-center">
         <div className="img-thumbnail rounded">
           <img
@@ -71,13 +66,12 @@ const LeftPane = ({ setUser, user, logOut, JWTToken, axios }) => {
           {user.username}
         </p>
         <div className="mt-2">
-          <Link
+          <input
+            type="button"
+            value="Logout"
             onClick={() => logOut()}
             className="btn btn-success btn-lg m-1"
-            to="/"
-          >
-            Logout
-          </Link>
+          />
           <Link to="/messaging" className="btn btn-danger btn-lg m-1">
             Close
           </Link>

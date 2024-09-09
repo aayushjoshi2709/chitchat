@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Start React App",
+        "type": "shell",
+        "command": "cd client && npm run start",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": [],
+        "detail": "Run npm start to start the React app"
+      }
+    ]
+}
+  

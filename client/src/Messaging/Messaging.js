@@ -22,45 +22,29 @@ const Messaging = ({ JWTToken, axios }) => {
 
   // get messages function
   const getMessages = async () => {
-    axios
-      .get("/messages", {
-        headers: {
-          Authorization: `Bearer ${JWTToken}`,
-        },
-      })
-      .then((response) => {
-        if (response.status === 200) {
-          setMessages(response.data);
-        }
-      });
+    axios.get("/messages").then((response) => {
+      if (response.status === 200) {
+        setMessages(response.data);
+      }
+    });
   };
   // const get friends
   const getFriends = async () => {
-    axios
-      .get(`/friends`, {
-        headers: {
-          Authorization: `Bearer ${JWTToken}`,
-        },
-      })
-      .then((response) => {
-        if (response.status === 200) {
-          const friendMap = {};
-          response.data.forEach((friend) => {
-            friendMap[friend.username] = friend;
-          });
-          setFriends(friendMap);
-        }
-      });
+    axios.get(`/friends`).then((response) => {
+      if (response.status === 200) {
+        const friendMap = {};
+        response.data.forEach((friend) => {
+          friendMap[friend.username] = friend;
+        });
+        setFriends(friendMap);
+      }
+    });
   };
 
   // get user function
   const getUser = async () => {
     axios
-      .get(`/user`, {
-        headers: {
-          Authorization: `Bearer ${JWTToken}`,
-        },
-      })
+      .get(`/user`)
       .then((response) => {
         if (response.status === 200) {
           setUser(response.data);
@@ -134,12 +118,13 @@ const Messaging = ({ JWTToken, axios }) => {
   useEffect(() => {
     if (searchedFriendText.length > 0) {
       const friendsFound = Object.keys(friends).filter((friendUserName) => {
-        if (friendUserName.includes(searchedFriendText)) return true;
+        if (friendUserName.includes(searchedFriendText.toLowerCase()))
+          return true;
         const fullname =
-          friends[friendUserName].firstName +
+          friends[friendUserName].firstName.toLowerCase() +
           " " +
-          friends[friendUserName].lastName;
-        return fullname.includes(searchedFriendText);
+          friends[friendUserName].lastName.toLowerCase();
+        return fullname.includes(searchedFriendText.toLowerCase());
       });
 
       if (friendsFound.length > 0) {
@@ -172,7 +157,6 @@ const Messaging = ({ JWTToken, axios }) => {
               messageData={messages[friendusername]}
               getTime={getTime}
               socket={socket}
-              JWTToken={JWTToken}
             />
           ) : (
             ""

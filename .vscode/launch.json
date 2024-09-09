@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Client",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/src",
+            "preLaunchTask": "Start React App"
+        },
+        {
+            "name":"Server",
+            "type":"node",
+            "request":"launch",
+            "program":"app.js",
+            "stopOnEntry":false,
+            "cwd":"${workspaceFolder}/server/",
+            "runtimeExecutable":null,
+            "runtimeArgs":[
+              "--nolazy"
+            ]
+        }
+    ]
+}

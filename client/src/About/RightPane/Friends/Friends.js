@@ -1,20 +1,55 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
+const Friends = ({ axios, user, setUser }) => {
+  const [searchedFriendsText, setSearchedFriendsText] = useState("");
+  const [searchedFriends, setSearchedFriends] = useState([]);
 
-const Friends = ({ friends, JWTToken, axios }) => {
+  useEffect(() => {
+    if (searchedFriendsText.length > 0) {
+      axios.get(`/friends/search/${searchedFriendsText}`).then((response) => {
+        if (response.status === 200) {
+          setSearchedFriends(response.data);
+        }
+      });
+    } else {
+      setSearchedFriends([]);
+    }
+  }, [searchedFriendsText]);
+
+  const addFriend = (username) => {
+    axios
+      .put(`/friends`, {
+        username: username,
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          toast.success(response.data.message);
+          const updatedUser = user;
+          updatedUser.friends.push(username);
+          setUser(updatedUser);
+        }
+      })
+      .catch((error) => {
+        toast.error(error.response.data.message);
+      });
+  };
+
   const removeFriend = (username) => {
     axios(`/friends/${username}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${JWTToken}`,
-      },
     })
       .then((response) => {
         if (response.status === 200) {
-          return response.json();
+          toast.success(response.data.message);
+          const updatedUser = user;
+          updatedUser.friends = updatedUser.friends.filter(
+            (friend) => friend.username !== username
+          );
+          setUser(updatedUser);
         }
       })
-      .then((data) => {
-        window.location.reload();
+      .catch((error) => {
+        toast.error(error.response.data.message);
       });
   };
   return (
@@ -25,6 +60,9 @@ const Friends = ({ friends, JWTToken, axios }) => {
           type="text"
           className="form-control my-3"
           placeholder="Search a friend by user Handle to add..."
+          onChange={(e) => {
+            setSearchedFriendsText(e.target.value);
+          }}
         />
         <div
           style={{ overflowX: "hidden", overflowY: "scroll", height: "50vh" }}
@@ -49,7 +87,30 @@ const Friends = ({ friends, JWTToken, axios }) => {
                   <th scope="col">Add</th>
                 </tr>
               </thead>
-              <tbody id="friends-search-body"></tbody>
+              <tbody id="friends-search-body">
+                {searchedFriends
+                  ? searchedFriends.map((friend, index) => {
+                      return (
+                        <tr key={friend.username}>
+                          <th scope="row">{index + 1}</th>
+                          <td>{friend.firstName + " " + friend.lastName}</td>
+                          <td>{friend.email}</td>
+                          <td>@{friend.username}</td>
+                          <td>
+                            <button
+                              className="btn btn-success"
+                              onClick={() => {
+                                addFriend(friend.username);
+                              }}
+                            >
+                              Add
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  : ""}
+              </tbody>
             </table>
           </div>
           <h3 className="h3">Current Friends</h3>
@@ -72,8 +133,8 @@ const Friends = ({ friends, JWTToken, axios }) => {
                   </tr>
                 </thead>
                 <tbody id="friends-table-body">
-                  {friends
-                    ? friends.map((friend, index) => {
+                  {user.friends
+                    ? user.friends.map((friend, index) => {
                         return (
                           <tr key={friend.username}>
                             <th scope="row">{index + 1}</th>

@@ -1,9 +1,7 @@
 import React from "react";
 const SearchFriend = ({ setSearchedFriendText }) => {
   const changeSearchFriendPrefix = (e) => {
-    if (e.target.value && e.target.value.length > 0) {
-      setSearchedFriendText(e.target.value);
-    }
+    setSearchedFriendText(e.target.value);
   };
 
   return (

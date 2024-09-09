@@ -17,14 +17,19 @@ const App = () => {
   const [JWTToken, setJWTToken] = useState("");
   axios.defaults.baseURL = "http://localhost:5000";
   // sign up function
-  useEffect(() => {
+  useEffect(async () => {
+    console.log(JWTToken);
     if (JWTToken === "") {
-      const token = localStorage.getItem("token");
+      const token = await localStorage.getItem("token");
       if (token) {
         setJWTToken(token);
+      } else {
+        redirect("/login");
       }
+    } else {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${JWTToken}`;
     }
-  }, []);
+  }, [JWTToken]);
 
   axios.interceptors.response.use(
     (response) => {
@@ -68,13 +73,7 @@ const App = () => {
         <Route
           exact
           path="/about"
-          element={
-            <About
-              JWTToken={JWTToken}
-              setJWTToken={setJWTToken}
-              axios={axios}
-            />
-          }
+          element={<About setJWTToken={setJWTToken} axios={axios} />}
         />
       </Routes>
     </Router>
