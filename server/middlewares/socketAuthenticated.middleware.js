@@ -14,7 +14,6 @@ const socketAuthenticated = async (socket, next) => {
         }
         user = await userCache.get(decoded.username);
         if (user) {
-          console.log(user);
           user = JSON.parse(user);
           logger.info("User found in cache: " + JSON.stringify(user));
           socket.user = user;

@@ -76,10 +76,11 @@ const Messaging = ({ JWTToken, axios, socket }) => {
 
   // check for recived messages
   function checkRecieved() {
-    for (let key in messages) {
+    for (let username in messages) {
       const ids = [];
       let count = 0;
-      messages[key].forEach(function (message) {
+      Object.keys(messages[username]["messages"]).forEach(function (id) {
+        let message = messages[username]["messages"][id];
         if (
           message.status &&
           message.status === "sent" &&
@@ -87,13 +88,16 @@ const Messaging = ({ JWTToken, axios, socket }) => {
           socket != null
         ) {
           ids.push(message._id);
-          message.status = "received";
+          messages[username]["messages"][id].status = "received";
           count++;
         }
       });
-      messages[key].received = count;
+      messages[username].received = count;
       if (ids.length > 0) {
-        socket.emit("update_message_status_received", ids);
+        socket.emit("update_message_status_received", {
+          from: username,
+          ids: ids,
+        });
       }
     }
   }
@@ -148,9 +152,10 @@ const Messaging = ({ JWTToken, axios, socket }) => {
             <RPane
               user={user}
               friend={friends[friendusername]}
-              messageData={messages[friendusername]}
+              messageData={messages[friendusername].messages}
               getTime={getTime}
               socket={socket}
+              axios={axios}
             />
           ) : (
             ""

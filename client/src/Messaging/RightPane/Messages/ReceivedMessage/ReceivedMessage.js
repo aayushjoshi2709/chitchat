@@ -1,11 +1,14 @@
 import React from "react";
 import styles from "./receivedMessage.module.css";
-const ReceivedMessage = ({ message, getTime, socket }) => {
+const ReceivedMessage = ({ message, getTime, socket, friend }) => {
   if (
     message.status &&
     (message.status === "received" || message.status === "sent")
   ) {
-    socket.emit("update_message_status_seen", message._id);
+    socket.emit("update_message_status_seen", {
+      username: friend.username,
+      id: message._id,
+    });
     message.status = "seen";
   }
   return (

@@ -60,7 +60,7 @@ MessagesRouter.post("/", dtoValidator(MessageDto, "body"), async (req, res) => {
               friendSocketId
           );
           socketInstance.emitEvent(friendSocketId, "new_message", message);
-          return res.status(StatusCodes.ACCEPTED).send({
+          return res.status(StatusCodes.CREATED).send({
             message: "Message sent successfully",
           });
         }
@@ -91,13 +91,25 @@ MessagesRouter.get("/", async (req, res) => {
       const response = {};
       messages.map((message) => {
         if (message.from.username == req.user.username) {
-          response[message.to.username] = response[message.to.username] || [];
-          response[message.to.username].push(message);
+          response[message.to.username] = response[message.to.username] || {};
+          response[message.to.username]["messages"] =
+            response[message.to.username]["messages"] || {};
+          response[message.to.username]["messages"][message._id] = message;
+          response[message.to.username]["lastMessage"] = {
+            message: message.message,
+            time: message.time,
+          };
           return;
         } else if (message.to.username == req.user.username) {
           response[message.from.username] =
-            response[message.from.username] || [];
-          response[message.from.username].push(message);
+            response[message.from.username] || {};
+          response[message.from.username]["messages"] =
+            response[message.from.username]["messages"] || {};
+          response[message.from.username]["messages"][message._id] = message;
+          response[message.from.username]["lastMessage"] = {
+            message: message.message,
+            time: message.time,
+          };
           return;
         }
       });

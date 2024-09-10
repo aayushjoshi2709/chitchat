@@ -1,15 +1,20 @@
 import React from "react";
 import "../../Styles/messaging.css";
 import { useRef } from "react";
-const SendMessage = ({ socket, friend }) => {
+const SendMessage = ({ axios, friend }) => {
   const input = useRef(null);
   const send = () => {
-    console.log("Sending message to: ", friend.username);
-    socket.emit("new_message", {
-      to: friend.username,
-      message: input.current.value,
-    });
-    input.current.value = "";
+    axios
+      .post("/messages", {
+        to: friend.username,
+        message: input.current.value,
+      })
+      .then((response) => {
+        if (response.status === 201) {
+          console.log("Message sent successfully");
+          input.current.value = "";
+        }
+      });
   };
   return (
     <div className="card p-2 m-0">
