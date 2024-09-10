@@ -1,10 +1,10 @@
 const jwt = require("jsonwebtoken");
 const { userCache, socketCache } = require("../redis/redis");
-const { User } = require("../models/User/User.model");
+const User = require("../models/User/User.model");
 const logger = require("../logger/logger");
 
 const socketAuthenticated = async (socket, next) => {
-  if (socket.handshake.query && socket.handshake.query.token) {
+  if (socket.handshake.query.token) {
     await jwt.verify(
       socket.handshake.query.token,
       process.env.JWT_SECRET,

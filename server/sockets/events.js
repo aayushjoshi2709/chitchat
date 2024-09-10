@@ -12,14 +12,13 @@ socketEvents.connection = (socket) => {
   socket.on("update_message_status_received", async (data) => {
     Message.updateMany(
       { id: { $in: data.ids } },
-      { $set: { status: "seen" } }
+      { $set: { status: "received" } }
     ).then((messages) => {
       logger.info("Messagages status updated to received for ids: " + data.ids);
       socketCache.get(data.username).then((friendSocketId) => {
         if (friendSocketId) {
           logger.info(
-            "Going to emit message to the friend on socket id: " +
-              friendSocketId
+            `Going to emit update message received status to the ${data.username} on socket id: ${friendSocketId}`
           );
           socketInstance.emitEvent(
             friendSocketId,
@@ -42,8 +41,7 @@ socketEvents.connection = (socket) => {
           .then((friendSocketId) => {
             if (friendSocketId) {
               logger.info(
-                "Going to emit message to the friend on socket id: " +
-                  friendSocketId
+                `Going to emit update message seen status to the ${data.username} on socket id: ${friendSocketId}`
               );
               socketInstance.emitEvent(
                 friendSocketId,

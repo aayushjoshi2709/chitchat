@@ -11,9 +11,17 @@ friendRouter.put("/", async (req, res) => {
   logger.debug("Request Params: " + req.params);
   const user = req.user;
   const friendUsername = req.body.username;
+
+  if (user.username === friendUsername) {
+    logger.error("User cannot add himself as a friend");
+    return res
+      .send(JSON.stringify({ message: "User cannot add himself as a friend" }))
+      .status(StatusCodes.BAD_REQUEST);
+  }
+
   logger.info("Going to find the friend: " + friendUsername);
   User.findOne({ username: friendUsername })
-    .then((friend) => {
+    .then(async (friend) => {
       if (!friend) {
         logger.error("Friend not found");
         return res
@@ -35,9 +43,33 @@ friendRouter.put("/", async (req, res) => {
         friends: [...user.friends, friend._id],
       })
         .exec()
-        .then((user) => {
+        .then(async (user) => {
+          console.log("updateResponse", user);
           userCache.del(user.username);
           logger.info("User updated successfully");
+          logger.info("Adding user to friend's friend list");
+          friend.friends.push(user._id);
+          friend.save();
+          userCache.del(friend.username);
+          friendSocketId = await socketCache.get(friend.username);
+          if (friendSocketId) {
+            logger.info(
+              "Emitting new friend event to friend: " +
+                friend.username +
+                " with socket id: " +
+                friendSocketId
+            );
+            socketInstance.emitEvent(friendSocketId, "add_friend", {
+              username: user.username,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+              image: user.image,
+            });
+          }
+          return res
+            .send(JSON.stringify({ message: "Friend added successfully" }))
+            .status(StatusCodes.ACCEPTED);
         })
         .catch((error) => {
           logger.error("Error updating user: " + error);
@@ -45,19 +77,6 @@ friendRouter.put("/", async (req, res) => {
             .send(JSON.stringify({ message: "Error adding friend" }))
             .status(StatusCodes.INTERNAL_SERVER_ERROR);
         });
-
-      logger.info("Adding user to friend's friend list");
-      friend.friends.push(user._id);
-      friend.save();
-      userCache.del(friend.username);
-      friendSocketId = socketCache.get(friend.username);
-      if (friendSocketId) {
-        logger.info("Emitting new friend event to friend: " + friend.username);
-        socketInstance.emitEvent(friendSocketId, "add_friend", req.user);
-      }
-      return res
-        .send(JSON.stringify({ message: "Friend added successfully" }))
-        .status(StatusCodes.ACCEPTED);
     })
     .catch((error) => {
       logger.error("Error in finding friend: " + error);
@@ -97,7 +116,7 @@ friendRouter.delete("/:username", async (req, res) => {
   logger.info("Going to delete a friend: " + req.params.username);
   const user = req.user;
   User.findOne({ username: req.params.username })
-    .then((friend) => {
+    .then(async (friend) => {
       if (!friend) {
         logger.error("Friend not found");
         return res
@@ -108,20 +127,27 @@ friendRouter.delete("/:username", async (req, res) => {
         friend.friends = friend.friends.filter(
           (friendsFriendIds) => !friendsFriendIds.equals(user._id)
         );
-        friend.save();
-        userCache.del(friend.username);
+        friend.save().then((friend) => {
+          userCache.set(friend.username, friend);
+        });
       } else {
         logger.info("There are no friends associated with: " + friend.username);
         logger.debug("User:", JSON.stringify(friend));
       }
       if (user.friends && user.friends.length > 0) {
-        const newFriendsArray = user.friends.filter(
-          (userFriendId) => userFriendId !== friend._id.toString()
-        );
-        User.findByIdAndUpdate(user._id, { $set: { friends: newFriendsArray } })
+        const newFriendsArray = user.friends.filter((userFriendId) => {
+          const friendId = friend._id.toString();
+          return userFriendId !== friendId;
+        });
+        logger.info("Updated friends array", newFriendsArray);
+        User.updateOne(
+          { _id: user._id },
+          { $set: { friends: newFriendsArray } },
+          { new: true }
+        )
           .then((user) => {
-            userCache.del(user.username);
-            logger.info("Removed friend from user: " + req.params.username);
+            userCache.del(user.username, user);
+            logger.info("Removed friend from user: " + user.username);
           })
           .catch((error) => {
             logger.error("Error updating user: " + error);
@@ -133,10 +159,19 @@ friendRouter.delete("/:username", async (req, res) => {
         logger.info("There are no friends associated with: " + user.username);
         logger.info("User:" + JSON.stringify(user));
       }
-      friendSocketId = socketCache.get(friend.username);
+      friendSocketId = await socketCache.get(friend.username);
       if (friendSocketId) {
-        logger.info("Emitting new friend event to friend: " + friend.username);
-        socketInstance.emitEvent(friendSocketId, "remove_friend", req.user);
+        logger.info(
+          "Emitting delete friend event to friend: " +
+            friend.username +
+            " with socket id: " +
+            friendSocketId
+        );
+        socketInstance.emitEvent(
+          friendSocketId,
+          "remove_friend",
+          req.user.username
+        );
       }
       return res
         .send(JSON.stringify({ message: "Friend removed successfully" }))

@@ -18,7 +18,9 @@ const Header = (props) => {
           props.user ? (
             <div className={Styles.details}>
               <p>{props.user.firstName + " " + props.user.lastName}</p>
-              <small>Online</small>
+              <span className={Styles.onlineSpan}>
+                <i class="fa-solid fa-circle"></i>
+              </span>
             </div>
           ) : (
             <div className={Styles.details}>

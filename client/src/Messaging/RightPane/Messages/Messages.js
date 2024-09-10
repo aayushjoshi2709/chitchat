@@ -14,17 +14,18 @@ const Messages = ({ messageData, getTime, socket, user, friend }) => {
     <div ref={messagesRef} className={Styles.messages}>
       {messageData
         ? Object.keys(messageData).map(function (messageId) {
-            return messageData[messageId].from.username === user.username ? (
+            const message = messageData[messageId];
+            return message.from.username === user.username ? (
               <SentMessage
                 key={messageId}
-                message={messageData[messageId]}
+                message={message}
                 getTime={getTime}
               />
             ) : (
               <ReceivedMessage
                 friend={friend}
                 key={messageId}
-                message={messageData[messageId]}
+                message={message}
                 getTime={getTime}
                 socket={socket}
               />

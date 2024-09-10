@@ -11,9 +11,9 @@ const { socketInstance } = require("../../sockets/socket");
 MessagesRouter.post("/", dtoValidator(MessageDto, "body"), async (req, res) => {
   const logger = req.logger;
   logger.info("Received new message: ", req.body);
-  const friend = JSON.parse(await userCache.get(req.body.to));
+  let friend = JSON.parse(await userCache.get(req.body.to));
   if (friend) {
-    logger.info("Friend found in cache: " + friend);
+    logger.info("Friend found in cache: " + JSON.stringify(friend));
   } else {
     try {
       friend = await User.findOne({ username: req.body.to });
@@ -31,7 +31,7 @@ MessagesRouter.post("/", dtoValidator(MessageDto, "body"), async (req, res) => {
     }
     await userCache.set(friend.username, JSON.stringify(friend));
   }
-  if (!req.user.friends.includes(friend._id)) {
+  if (!req.user.friends.includes(friend._id.toString())) {
     logger.error("User is not friend with the receiver");
     return res
       .status(StatusCodes.BAD_REQUEST)
@@ -59,11 +59,15 @@ MessagesRouter.post("/", dtoValidator(MessageDto, "body"), async (req, res) => {
             "Going to emit message to the friend on socket id: " +
               friendSocketId
           );
-          socketInstance.emitEvent(friendSocketId, "new_message", message);
-          return res.status(StatusCodes.CREATED).send({
-            message: "Message sent successfully",
+          socketInstance.emitEvent(friendSocketId, "new_message", {
+            from: req.user.username,
+            message: message,
           });
         }
+      });
+      return res.status(StatusCodes.CREATED).send({
+        data: message,
+        message: "Message sent successfully",
       });
     })
     .catch((error) => {
@@ -83,41 +87,38 @@ MessagesRouter.get("/", async (req, res) => {
     ],
   })
     .select("from to message time status")
-    .sort({ time: -1 })
+    .sort({ time: 1 })
     .skip(skip)
     .limit(limit)
     .then((messages) => {
       logger.info("Got the messages of length: " + messages.length);
       const response = {};
+      const putMessageIntoRespose = (message, recipient) => {
+        const username = message[recipient].username;
+        response[username] = {
+          ...response[username],
+        };
+        response[username]["messages"] = {
+          ...response[username]["messages"],
+          [message._id]: message,
+        };
+        response[username]["lastMessage"] = {
+          message: message.message,
+          time: message.time,
+        };
+      };
       messages.map((message) => {
         if (message.from.username == req.user.username) {
-          response[message.to.username] = response[message.to.username] || {};
-          response[message.to.username]["messages"] =
-            response[message.to.username]["messages"] || {};
-          response[message.to.username]["messages"][message._id] = message;
-          response[message.to.username]["lastMessage"] = {
-            message: message.message,
-            time: message.time,
-          };
-          return;
+          putMessageIntoRespose(message, "to");
         } else if (message.to.username == req.user.username) {
-          response[message.from.username] =
-            response[message.from.username] || {};
-          response[message.from.username]["messages"] =
-            response[message.from.username]["messages"] || {};
-          response[message.from.username]["messages"][message._id] = message;
-          response[message.from.username]["lastMessage"] = {
-            message: message.message,
-            time: message.time,
-          };
-          return;
+          putMessageIntoRespose(message, "from");
         }
       });
       res.send(JSON.stringify(response));
     });
 });
 
-// get messages with a particular user
+// get messages with a ddparticular user
 MessagesRouter.get("/:username", async (req, res) => {
   logger = req.logger;
   limit = req.query.limit || 100;

@@ -69,7 +69,9 @@ const LeftPane = ({ setUser, user, logOut, axios }) => {
           <input
             type="button"
             value="Logout"
-            onClick={() => logOut()}
+            onClick={() => {
+              logOut();
+            }}
             className="btn btn-success btn-lg m-1"
           />
           <Link to="/messaging" className="btn btn-danger btn-lg m-1">
