@@ -34,14 +34,12 @@ Chit Chat
         REDIS_HOST=127.0.0.1
         DATABASE_URI=mongodb://127.0.0.1:27017/chit-chat
         CLIENT_URL=http://127.0.0.1:3000
-
         ```
 
     -   Create a `.env.local` file in the `client` directory with the following variable:
 
         ```
         SERVER_URL=http://127.0.0.1:3000
-
         ```
 
 -   **Run the application:**
