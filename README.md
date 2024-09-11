@@ -1,86 +1,62 @@
-# Chit Chat
+Chit Chat
+---------
 
-Chit Chat is a chatting app with end to end encryption instant messaging.
+**A secure, end-to-end encrypted instant messaging app.**
 
-## Features Included
+### Features
 
-- End to end encryption
-- Instant Messaging
-- Read reciepts
+-   **End-to-End Encryption:** Ensures your messages remain private and protected from unauthorized access.
+-   **Instant Messaging:** Real-time communication with friends and family, allowing for quick and efficient conversations.
+-   **Read Receipts:** Know when your messages have been delivered and read, providing confirmation and peace of mind.
 
-## Technologies Used
+### Technologies Used
 
-- Redis - For user and socket id caching
-- MongoDB - To store user and message data
-- Docker - For containerazation
-- React - To build a single page web application
-- Node - For the backend
+-   **Redis:** A high-performance in-memory data structure store, used for caching user and socket IDs to improve response times.
+-   **MongoDB:** A flexible and scalable NoSQL database, ideal for storing user and message data in a structured format.
+-   **Docker:** A containerization platform that simplifies the deployment and management of applications across different environments.
+-   **React:** A popular JavaScript library for building user interfaces, providing a rich and interactive experience for users.
+-   **Node.js:** A JavaScript runtime environment that allows for efficient server-side development, enabling real-time communication and handling asynchronous operations.
 
-## How to setup
+### Setup
 
-There are two methords to set up chit chat locally
-- Manual configuration
-- Via Docker Compose
+**1\. Manual Setup**
 
-### Manual Configuration
+-   **Prerequisites:**
+    -   MongoDB and MySQL installed locally.
+-   **Environment Variables:**
+    -   Create a `.env` file in the `server` directory with the following variables:
 
-- To run this manually you have to first install Mongodb and mysql in your local machine
-- Now create a .env file inside the server folder having the environment configuration
+        ```
+        PORT=5000
+        LOG_LEVEL=info
+        JWT_SECRET=your_jwt_secret
+        REDIS_PORT=6379
+        REDIS_HOST=127.0.0.1
+        DATABASE_URI=mongodb://127.0.0.1:27017/chit-chat
+        CLIENT_URL=http://127.0.0.1:3000
 
-    __server/.env__
+        ```
 
-    - Add the following variables to the envionment file
+    -   Create a `.env.local` file in the `client` directory with the following variable:
 
-        - PORT=port in which you want the server to run
+        ```
+        SERVER_URL=http://127.0.0.1:3000
 
-        - LOG_LEVEL=log level for the server
+        ```
 
-        - JWT_SECRET= your jwt secrete
+-   **Run the application:**
+    -   Navigate to the `server` directory and run `npm install && npm run start`.
+    -   Navigate to the `client` directory and run `npm install && npm start`.
 
-        - REDIS_PORT= port in which redis is running
+**2\. Docker Compose Setup**
 
-        - REDIS_HOST= redis host
+-   **Prerequisites:** Docker installed.
+-   **Run the application:**
+    -   Navigate to the project's root directory and run `docker-compose up -d`.
+    -   Access the application at `http://127.0.0.1:8080`.
 
-        - DATABASE_URI= uri string for the database
+**Additional Notes:**
 
-        - CLIENT_URL= url for the client
-
-        An example for doing the same
-
-            PORT=5000
-            LOG_LEVEL=info
-            JWT_SECRET=sfsdfwer
-            REDIS_PORT=6379
-            REDIS_HOST=127.0.0.1
-            DATABASE_URI=mongodb://127.0.0.1:27017/chit-chat
-            CLIENT_URL=http://127.0.0.1:3000
-
-- Add a .env.local file to client folder
-    __client/.env.local__
-    - Add the following variable to this environment file
-        - SERVER_URL - URL for the server
-
-        An example for doing the same
-            
-            SERVER_URL=http://127.0.0.1:3000
-- Now run the following command to install dependencies and start the server
-
-    > cd server && npm install && npm run start
-
-- Move back to client folder and install the dependencies of the client and start the client server
-    > cd .. && cd client && npm install && npm start
-
-### Manual Configuration
-
-- For user that just want to try this up as fast as possible. I have build a docker compose file
-
-- Just install docker in your computer and run the following command on workspace directory
-
-    > docker compose up -d
-
-This will setup docker containers install all the dependencies run the required servers you have to just visited
-
-    http://127.0.0.1:8080
-
-in your browser.
-
+-   For production environments, consider using a cloud-based database service like MongoDB Atlas or AWS RDS for scalability and reliability.
+-   Implement appropriate security measures, such as input validation and rate limiting, to protect against potential vulnerabilities.
+-   Regularly update dependencies and patch security vulnerabilities to ensure the application's integrity.
