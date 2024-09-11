@@ -45,7 +45,7 @@ const LeftPane = ({ setUser, user, logOut, axios }) => {
             className="img-fluid rounded"
             src={
               user && user.image
-                ? user.image
+                ? `${process.env.SERVER_URL}/${user.image}`
                 : process.env.PUBLIC_URL + "/assets/avatar.png"
             }
           />
@@ -69,7 +69,9 @@ const LeftPane = ({ setUser, user, logOut, axios }) => {
           <input
             type="button"
             value="Logout"
-            onClick={() => logOut()}
+            onClick={() => {
+              logOut();
+            }}
             className="btn btn-success btn-lg m-1"
           />
           <Link to="/messaging" className="btn btn-danger btn-lg m-1">

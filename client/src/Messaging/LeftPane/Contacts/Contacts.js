@@ -20,9 +20,7 @@ function Contacts({
                 contact={friends[friendUserName]}
                 lastMessage={
                   messages[friendUserName]
-                    ? messages[friendUserName][
-                        messages[friendUserName].length - 1
-                      ]
+                    ? messages[friendUserName]["lastMessage"]
                     : null
                 }
                 loadMessages={loadMessages}
@@ -37,7 +35,9 @@ function Contacts({
                 friendUsername={friendUserName}
                 contact={friends[friendUserName]}
                 lastMessage={
-                  messages[friendUserName][messages[friendUserName].length - 1]
+                  messages[friendUserName]
+                    ? messages[friendUserName]["lastMessage"]
+                    : null
                 }
                 loadMessages={loadMessages}
               />

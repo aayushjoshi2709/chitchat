@@ -10,7 +10,7 @@ const Header = (props) => {
           className={Styles.avatar}
           src={
             props.user && props.user.image
-              ? props.user.image
+              ? `${process.env.SERVER_URL}/${user.image}`
               : process.env.PUBLIC_URL + "/assets/avatar.png"
           }
         />
@@ -18,7 +18,9 @@ const Header = (props) => {
           props.user ? (
             <div className={Styles.details}>
               <p>{props.user.firstName + " " + props.user.lastName}</p>
-              <small>Online</small>
+              <span className={Styles.onlineSpan}>
+                <i class="fa-solid fa-circle"></i>
+              </span>
             </div>
           ) : (
             <div className={Styles.details}>

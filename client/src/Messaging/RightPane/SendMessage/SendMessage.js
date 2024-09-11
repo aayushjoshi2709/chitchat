@@ -1,15 +1,37 @@
 import React from "react";
 import "../../Styles/messaging.css";
 import { useRef } from "react";
-const SendMessage = ({ socket, friend }) => {
+const SendMessage = ({ axios, friend, messages, setMessages }) => {
   const input = useRef(null);
   const send = () => {
-    console.log("Sending message to: ", friend.username);
-    socket.emit("new_message", {
-      to: friend.username,
-      message: input.current.value,
-    });
-    input.current.value = "";
+    if (input.current.value !== "") {
+      axios
+        .post("/messages", {
+          to: friend.username,
+          message: input.current.value,
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            const message = response.data.data;
+            const updatedMessages = {
+              ...messages,
+              [friend.username]: {
+                ...messages[friend.username],
+                messages: {
+                  ...messages[friend.username]?.messages,
+                  [message._id]: message,
+                },
+                lastMessage: {
+                  message: message.message,
+                  time: message.time,
+                },
+              },
+            };
+            setMessages(updatedMessages);
+            input.current.value = "";
+          }
+        });
+    }
   };
   return (
     <div className="card p-2 m-0">

@@ -7,12 +7,8 @@ const SentMessage = ({ message, getTime }) => {
         <div>
           <p className={style.messagePara}>{message.message}</p>
         </div>
-        <div
-          id={message.id}
-          className="text-muted text-end"
-          style={{ fontSize: "small" }}
-        >
-          {getTime(message.time)}{" "}
+        <div id={message.id} className="text-muted text-end">
+          <small>{getTime(message.time)} </small>
           {message.status === "sent" ? (
             <i className="fa-solid fa-check"></i>
           ) : message.status === "received" ? (

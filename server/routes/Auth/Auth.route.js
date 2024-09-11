@@ -7,6 +7,7 @@ const LoginDto = require("../../dtos/Login.dto");
 const jwt = require("jsonwebtoken");
 const dtoValidator = require("../../middlewares/dtoValidator.middleware");
 const { userCache } = require("../../redis/redis");
+
 async function hashPassword(password) {
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -49,6 +50,7 @@ AuthRouter.post(
           .then((user) => {
             logger.info("User registered successfully" + user);
             token = generateToken(user);
+            delete user.password;
             userCache.set(user.username, JSON.stringify(user));
             return res
               .status(StatusCodes.CREATED)
@@ -70,6 +72,7 @@ AuthRouter.post("/login", dtoValidator(LoginDto, "body"), async (req, res) => {
   const { username, password } = req.body;
   logger.info("Logging in user:" + username);
   User.findOne({ username: username })
+    .select("-messages")
     .then(async (user) => {
       if (!user) {
         logger.error("User not found for username: " + username);
@@ -80,6 +83,7 @@ AuthRouter.post("/login", dtoValidator(LoginDto, "body"), async (req, res) => {
       if (await comparePassword(password, user.password)) {
         const token = generateToken(user);
         logger.info("Login successful for username: " + username);
+        delete user.password;
         userCache.set(user.username, JSON.stringify(user));
         return res
           .status(StatusCodes.OK)

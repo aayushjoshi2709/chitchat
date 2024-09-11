@@ -27,13 +27,17 @@ function Contact({
       {contact ? (
         <>
           <div className={style.nameContact}>
-            <p>{contact.firstName + " " + contact.lastName}</p>
-            <p className={style.lastMessage}>
-              {lastMessage ? lastMessage.message : ""}
+            <p className={style.name}>
+              {contact.firstName + " " + contact.lastName}
             </p>
+            <small className={style.lastMessage}>
+              {lastMessage ? lastMessage.message : ""}
+            </small>
           </div>
           <div>
-            {lastMessage && lastMessage.time ? getTime(lastMessage.time) : ""}
+            <small>
+              {lastMessage && lastMessage.time ? getTime(lastMessage.time) : ""}
+            </small>
             {contact.received && contact.received > 0 ? (
               <MessageCount count={contact.received} />
             ) : (
@@ -43,10 +47,10 @@ function Contact({
         </>
       ) : (
         <div className={style.nameContact}>
-          <p>Removed Friend</p>
-          <p className={style.lastMessage}>
+          <p className={style.name}>Removed Friend</p>
+          <small className={style.lastMessage}>
             {lastMessage && lastMessage.message ? lastMessage.message : ""}
-          </p>
+          </small>
         </div>
       )}
     </div>

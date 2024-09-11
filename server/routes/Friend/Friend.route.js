@@ -2,8 +2,9 @@ const friendRouter = require("express").Router();
 const { StatusCodes } = require("http-status-codes");
 const logger = require("../../logger/logger");
 const User = require("../../models/User/User.model");
-const { userCache } = require("../../redis/redis");
-
+const { userCache, socketCache } = require("../../redis/redis");
+const { socketInstance } = require("../../sockets/socket");
+const ObjectId = require("mongoose").Types.ObjectId;
 // create new friend route
 friendRouter.put("/", async (req, res) => {
   const logger = req.logger;
@@ -11,14 +12,22 @@ friendRouter.put("/", async (req, res) => {
   logger.debug("Request Params: " + req.params);
   const user = req.user;
   const friendUsername = req.body.username;
+
+  if (user.username === friendUsername) {
+    logger.error("User cannot add himself as a friend");
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .send(JSON.stringify({ message: "User cannot add himself as a friend" }));
+  }
+
   logger.info("Going to find the friend: " + friendUsername);
   User.findOne({ username: friendUsername })
-    .then((friend) => {
+    .then(async (friend) => {
       if (!friend) {
         logger.error("Friend not found");
         return res
-          .send(JSON.stringify({ message: "Friend not found" }))
-          .status(StatusCodes.NOT_FOUND);
+          .status(StatusCodes.NOT_FOUND)
+          .send(JSON.stringify({ message: "Friend not found" }));
       }
       logger.info("Found the friend: " + friend);
       logger.silly("Friend: " + friend);
@@ -26,8 +35,8 @@ friendRouter.put("/", async (req, res) => {
       if (user.friends.includes(friend._id.toString())) {
         logger.error("Friend already exists in user's friend list");
         return res
-          .send(JSON.stringify({ message: "Friend already exists" }))
-          .status(StatusCodes.BAD_REQUEST);
+          .status(StatusCodes.BAD_REQUEST)
+          .send(JSON.stringify({ message: "Friend already exists" }));
       }
 
       logger.info("Adding friend to user's friend list");
@@ -35,30 +44,46 @@ friendRouter.put("/", async (req, res) => {
         friends: [...user.friends, friend._id],
       })
         .exec()
-        .then((user) => {
+        .then(async (user) => {
+          console.log("updateResponse", user);
           userCache.del(user.username);
           logger.info("User updated successfully");
+          logger.info("Adding user to friend's friend list");
+          friend.friends.push(user._id);
+          friend.save();
+          userCache.del(friend.username);
+          friendSocketId = await socketCache.get(friend.username);
+          if (friendSocketId) {
+            logger.info(
+              "Emitting new friend event to friend: " +
+                friend.username +
+                " with socket id: " +
+                friendSocketId
+            );
+            socketInstance.emitEvent(friendSocketId, "add_friend", {
+              username: user.username,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+              image: user.image,
+            });
+          }
+          return res
+            .status(StatusCodes.OK)
+            .send(JSON.stringify({ message: "Friend added successfully" }));
         })
         .catch((error) => {
           logger.error("Error updating user: " + error);
           return res
-            .send(JSON.stringify({ message: "Error adding friend" }))
-            .status(StatusCodes.INTERNAL_SERVER_ERROR);
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .send(JSON.stringify({ message: "Error adding friend" }));
         });
-
-      logger.info("Adding user to friend's friend list");
-      friend.friends.push(user._id);
-      friend.save();
-      userCache.del(friend.username);
-      return res
-        .send(JSON.stringify({ message: "Friend added successfully" }))
-        .status(StatusCodes.ACCEPTED);
     })
     .catch((error) => {
       logger.error("Error in finding friend: " + error);
       return res
-        .send(JSON.stringify({ message: "Error adding friend" }))
-        .status(StatusCodes.INTERNAL_SERVER_ERROR);
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .send(JSON.stringify({ message: "Error adding friend" }));
     });
 });
 
@@ -82,8 +107,8 @@ friendRouter.get("/", async (req, res) => {
     .catch((error) => {
       logger.error("Error in getting friends: " + error);
       return res
-        .send(JSON.stringify({ message: "Error getting friends" }))
-        .status(StatusCodes.INTERNAL_SERVER_ERROR);
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .send(JSON.stringify({ message: "Error getting friends" }));
     });
 });
 
@@ -92,51 +117,96 @@ friendRouter.delete("/:username", async (req, res) => {
   logger.info("Going to delete a friend: " + req.params.username);
   const user = req.user;
   User.findOne({ username: req.params.username })
-    .then((friend) => {
+    .then(async (friend) => {
       if (!friend) {
         logger.error("Friend not found");
         return res
-          .send(JSON.stringify({ message: "Friend not found" }))
-          .status(StatusCodes.NOT_FOUND);
+          .status(StatusCodes.NOT_FOUND)
+          .send(JSON.stringify({ message: "Friend not found" }));
       }
+      const promiseArray = [];
       if (friend.friends && friend.friends.length > 0) {
+        logger.info("Removing user from friend's friend list");
+        logger.info("Friend friends: " + friend.friends);
         friend.friends = friend.friends.filter(
-          (friendsFriendIds) => !friendsFriendIds.equals(user._id)
+          (friendsFriendId) => !friendsFriendId.equals(user._id)
         );
-        friend.save();
-        userCache.del(friend.username);
+        const promise1 = friend
+          .save()
+          .then(() => {
+            userCache.del(friend.username);
+            logger.info(
+              `Removed ${user.username} from ${friend.username}'s friend list`
+            );
+          })
+          .catch((error) => {
+            logger.error("Error saving friend: " + error);
+            return res
+              .status(StatusCodes.INTERNAL_SERVER_ERROR)
+              .send(JSON.stringify({ message: "Error removing friend" }));
+          });
+        promiseArray.push(promise1);
       } else {
         logger.info("There are no friends associated with: " + friend.username);
         logger.debug("User:", JSON.stringify(friend));
       }
+
       if (user.friends && user.friends.length > 0) {
-        const newFriendsArray = user.friends.filter(
-          (userFriendId) => userFriendId !== friend._id.toString()
-        );
-        User.findByIdAndUpdate(user._id, { $set: { friends: newFriendsArray } })
-          .then((user) => {
-            userCache.del(user.username);
-            logger.info("Removed friend from user: " + req.params.username);
+        logger.info("Removing friend from user's friend list");
+        logger.info("User friends: " + user.friends);
+        const newFriendsArray = user.friends.filter((userFriendId) => {
+          if (typeof userFriendId === "string") {
+            userFriendId = new ObjectId(userFriendId);
+          }
+          return !userFriendId.equals(friend._id);
+        });
+        logger.info("Updated friends array", newFriendsArray);
+        const promise2 = User.updateOne(
+          { _id: user._id },
+          { $set: { friends: newFriendsArray } }
+        )
+          .then((response) => {
+            userCache.del(user.username, JSON.stringify(user));
+            logger.info(
+              `Removed ${friend.username} from ${user.username}'s friend list`
+            );
           })
           .catch((error) => {
             logger.error("Error updating user: " + error);
             return res
-              .send(JSON.stringify({ message: "Error removing friend" }))
-              .status(StatusCodes.INTERNAL_SERVER_ERROR);
+              .status(StatusCodes.INTERNAL_SERVER_ERROR)
+              .send(JSON.stringify({ message: "Error removing friend" }));
           });
+        promiseArray.push(promise2);
       } else {
         logger.info("There are no friends associated with: " + user.username);
         logger.info("User:" + JSON.stringify(user));
       }
-      return res
-        .send(JSON.stringify({ message: "Friend removed successfully" }))
-        .status(StatusCodes.ACCEPTED);
+      Promise.all(promiseArray).then(async () => {
+        friendSocketId = await socketCache.get(friend.username);
+        if (friendSocketId) {
+          logger.info(
+            "Emitting delete friend event to friend: " +
+              friend.username +
+              " with socket id: " +
+              friendSocketId
+          );
+          socketInstance.emitEvent(
+            friendSocketId,
+            "remove_friend",
+            req.user.username
+          );
+        }
+        return res
+          .status(StatusCodes.OK)
+          .send(JSON.stringify({ message: "Friend removed successfully" }));
+      });
     })
     .catch((error) => {
       logger.error("Error getting friend details: " + error);
       return res
-        .send(JSON.stringify({ message: "Error getting friend" }))
-        .status(StatusCodes.INTERNAL_SERVER_ERROR);
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .send(JSON.stringify({ message: "Error getting friend" }));
     });
 });
 
@@ -153,8 +223,8 @@ friendRouter.get("/search/:username", async (req, res) => {
       if (!users) {
         logger.error("No friends found");
         return res
-          .send(JSON.stringify({ message: "No friends found" }))
-          .status(StatusCodes.NOT_FOUND);
+          .status(StatusCodes.NOT_FOUND)
+          .send(JSON.stringify({ message: "No friends found" }));
       }
       logger.info("Found friends: " + users);
       return res.send(JSON.stringify(users));
@@ -162,8 +232,8 @@ friendRouter.get("/search/:username", async (req, res) => {
     .catch((error) => {
       logger.error("Error in finding friends: " + error);
       return res
-        .send(JSON.stringify({ message: "Error finding friends" }))
-        .status(StatusCodes.INTERNAL_SERVER_ERROR);
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .send(JSON.stringify({ message: "Error finding friends" }));
     });
 });
 

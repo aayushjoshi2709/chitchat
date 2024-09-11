@@ -4,27 +4,56 @@ import RPane from "./RightPane/RightPane";
 import { useState, useEffect } from "react";
 import "./Styles/messaging.css";
 import styles from "./messaging.module.css";
-import io from "socket.io-client";
 
-const Messaging = ({ JWTToken, axios }) => {
-  const [socket, setSocket] = useState(null);
+const Messaging = ({
+  JWTToken,
+  axios,
+  socket,
+  friends,
+  setFriends,
+  messages,
+  setMessages,
+}) => {
   const [user, setUser] = useState(null);
-  const [friends, setFriends] = useState({});
-  const [messages, setMessages] = useState({});
   const [isRightOn, setIsRightOn] = useState(false);
   const [friendusername, setFriendUserName] = useState("");
   const [searchedFriendText, setSearchedFriendText] = useState("");
   const [searchedFriends, setSearchedFriends] = useState([]);
-  // disconnect socket when when window/browser/site is closed
-  window.addEventListener("onbeforeunload", function (e) {
-    if (socket) socket.disconnect();
-  });
+  const [gotFriends, setGotFriends] = useState(false);
 
+  // check for recived messages
+  function checkReceived(messages) {
+    for (let username in messages) {
+      const ids = [];
+      let count = 0;
+      Object.keys(messages[username]["messages"]).forEach(function (id) {
+        let message = messages[username]["messages"][id];
+        if (
+          message.status &&
+          message.status === "sent" &&
+          message.to.username === user.username &&
+          socket != null
+        ) {
+          ids.push(message._id);
+          messages[username]["messages"][id].status = "received";
+          count++;
+        }
+      });
+      messages[username].received = count;
+      if (ids.length > 0) {
+        socket.emit("update_message_status_received", {
+          from: username,
+          ids: ids,
+        });
+      }
+    }
+    return messages;
+  }
   // get messages function
   const getMessages = async () => {
     axios.get("/messages").then((response) => {
       if (response.status === 200) {
-        setMessages(response.data);
+        setMessages(checkReceived(response.data));
       }
     });
   };
@@ -37,6 +66,7 @@ const Messaging = ({ JWTToken, axios }) => {
           friendMap[friend.username] = friend;
         });
         setFriends(friendMap);
+        setGotFriends(true);
       }
     });
   };
@@ -57,18 +87,22 @@ const Messaging = ({ JWTToken, axios }) => {
   useEffect(async () => {
     if (JWTToken && JWTToken !== "") {
       await getUser();
-      await getFriends();
-      await getMessages();
-      const socket_conn = io("http://127.0.0.1:5000", {
-        query: { token: JWTToken },
-      }).connect({
-        transports: ["websocket"],
-        reconnection: true,
-        reconnectionDelay: 1000,
-      });
-      setSocket(socket_conn);
     }
   }, [JWTToken]);
+
+  useEffect(async () => {
+    if (user) {
+      await getFriends();
+    }
+  }, [user]);
+
+  useEffect(async () => {
+    if (gotFriends) {
+      await getMessages();
+      setGotFriends(false);
+    }
+  }, [gotFriends]);
+
   function getTime(str) {
     let today = new Date(str);
     let hour =
@@ -87,33 +121,6 @@ const Messaging = ({ JWTToken, axios }) => {
       setIsRightOn(true);
     }
   }, [friendusername]);
-
-  // check for recived messages
-  function checkRecieved() {
-    for (let key in messages) {
-      const ids = [];
-      let count = 0;
-      messages[key].forEach(function (message) {
-        if (
-          message.status &&
-          message.status === "sent" &&
-          message.to.username === user.username &&
-          socket != null
-        ) {
-          ids.push(message._id);
-          message.status = "received";
-          count++;
-        }
-      });
-      messages[key].received = count;
-      if (ids.length > 0) {
-        socket.emit("update_message_status_received", ids);
-      }
-    }
-  }
-  useEffect(() => {
-    checkRecieved();
-  }, [messages]);
 
   useEffect(() => {
     if (searchedFriendText.length > 0) {
@@ -152,11 +159,14 @@ const Messaging = ({ JWTToken, axios }) => {
           />
           {isRightOn ? (
             <RPane
+              messages={messages}
+              setMessages={setMessages}
               user={user}
+              friendusername={friendusername}
               friend={friends[friendusername]}
-              messageData={messages[friendusername]}
               getTime={getTime}
               socket={socket}
+              axios={axios}
             />
           ) : (
             ""

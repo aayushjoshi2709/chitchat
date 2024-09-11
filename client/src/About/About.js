@@ -4,9 +4,10 @@ import LeftPane from "./LeftPane/LeftPane";
 import Styles from "./about.module.css";
 import { useState, useEffect } from "react";
 import { redirect } from "react-router-dom";
-function About({ setJWTToken, axios }) {
+function About({ setJWTToken, axios, friends, setFriends }) {
   // logout function
-  const logOut = function () {
+  const logOut = () => {
+    console.log("here");
     localStorage.removeItem("token");
     setJWTToken("");
     redirect("/login");
@@ -30,7 +31,13 @@ function About({ setJWTToken, axios }) {
       <div className={Styles.header}></div>
       <div className={Styles.mainContainer}>
         <LeftPane setUser={setUser} user={user} logOut={logOut} axios={axios} />
-        <RightPane user={user} axios={axios} setUser={setUser} />
+        <RightPane
+          friends={friends}
+          setFriends={setFriends}
+          user={user}
+          axios={axios}
+          setUser={setUser}
+        />
       </div>
     </div>
   );

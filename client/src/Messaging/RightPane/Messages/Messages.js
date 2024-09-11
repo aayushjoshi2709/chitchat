@@ -3,7 +3,7 @@ import SentMessage from "./SentMessage/SentMessage";
 import ReceivedMessage from "./ReceivedMessage/ReceivedMessage";
 import Styles from "./messages.module.css";
 import { useRef } from "react";
-const Messages = ({ messageData, getTime, socket, user }) => {
+const Messages = ({ messageData, getTime, socket, user, friend }) => {
   const messagesRef = useRef(null);
   useEffect(() => {
     if (messagesRef.current) {
@@ -13,16 +13,18 @@ const Messages = ({ messageData, getTime, socket, user }) => {
   return (
     <div ref={messagesRef} className={Styles.messages}>
       {messageData
-        ? messageData.map(function (message) {
+        ? Object.keys(messageData).map(function (messageId) {
+            const message = messageData[messageId];
             return message.from.username === user.username ? (
               <SentMessage
-                key={message.id}
+                key={messageId}
                 message={message}
                 getTime={getTime}
               />
             ) : (
               <ReceivedMessage
-                key={message.id}
+                friend={friend}
+                key={messageId}
                 message={message}
                 getTime={getTime}
                 socket={socket}

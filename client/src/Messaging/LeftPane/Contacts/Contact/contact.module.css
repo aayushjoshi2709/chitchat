@@ -3,6 +3,8 @@
     flex-direction: row;
     border-bottom: 1px solid #CED4DA;
     padding: 10px;
+    align-items: center;
+    text-transform: capitalize;
 }
 .nameContact{
     display: flex;
@@ -25,4 +27,8 @@
     width: 50px;
     height: 50px;
     margin-right: 10px;
+}
+
+.name{
+    text-transform: capitalize;
 }

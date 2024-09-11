@@ -20,7 +20,7 @@ const SignUpPage = ({ setJWTToken }) => {
         password: pass,
       })
       .then((response) => {
-        if (response.status === 201) {
+        if (response.status === 200) {
           const token = response.data.token;
           if (token) {
             toast.success(response.data.message);
