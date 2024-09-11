@@ -45,7 +45,7 @@ const LeftPane = ({ setUser, user, logOut, axios }) => {
             className="img-fluid rounded"
             src={
               user && user.image
-                ? user.image
+                ? `${process.env.SERVER_URL}/${user.image}`
                 : process.env.PUBLIC_URL + "/assets/avatar.png"
             }
           />

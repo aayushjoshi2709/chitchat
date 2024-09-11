@@ -11,7 +11,7 @@ class Socket {
   establishSocket(http) {
     this.#socket = socket(http, {
       cors: {
-        origin: "*",
+        origin: process.env.CLIENT_URL,
         methods: ["GET", "POST"],
         transports: ["websocket"],
         credentials: true,

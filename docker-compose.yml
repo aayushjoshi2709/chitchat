@@ -1,0 +1,39 @@
+version: '3.8'  
+services:
+  cache:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  database:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+
+  server:
+    build:
+      context: ./server
+      dockerfile: .dockerfile
+    environment:
+      - PORT=5000
+      - LOG_LEVEL=info
+      - JWT_SECRET=123sdffsdf
+      - REDIS_PORT=6379
+      - REDIS_HOST=cache
+      - DATABASE_URI=mongodb://database:27017/chit-chat
+      - CLIENT_URL=http://localhost:8080
+    ports:
+      - "5000:5000"
+    depends_on:
+      - cache
+      - database
+    
+
+  client:
+    build:
+      context: ./client
+      dockerfile: .dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - server

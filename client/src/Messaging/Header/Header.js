@@ -10,7 +10,7 @@ const Header = (props) => {
           className={Styles.avatar}
           src={
             props.user && props.user.image
-              ? props.user.image
+              ? `${process.env.SERVER_URL}/${user.image}`
               : process.env.PUBLIC_URL + "/assets/avatar.png"
           }
         />

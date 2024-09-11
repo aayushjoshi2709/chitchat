@@ -30,7 +30,7 @@ const App = () => {
     if (socket) socket.disconnect();
   });
 
-  axios.defaults.baseURL = "http://localhost:5000";
+  axios.defaults.baseURL = process.env.SERVER_URL;
   // sign up function
   useEffect(async () => {
     if (JWTToken === "") {
@@ -45,7 +45,7 @@ const App = () => {
       }
     } else if (!socket) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${JWTToken}`;
-      const socket_conn = io("http://127.0.0.1:5000", {
+      const socket_conn = io(process.env.SERVER_URL, {
         query: { token: JWTToken },
       }).connect({
         transports: ["websocket"],

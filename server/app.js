@@ -20,7 +20,7 @@ require("dotenv").config();
 // set app to use cors
 app.use(
   cors({
-    origin: "*",
+    origin: process.env.CLIENT_URL,
   })
 );
 // set app to user body parser
