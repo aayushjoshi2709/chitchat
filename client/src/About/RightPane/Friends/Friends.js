@@ -3,47 +3,45 @@ import toast from "react-hot-toast";
 const Friends = ({ axios, friends, setFriends }) => {
   const [searchedFriendsText, setSearchedFriendsText] = useState("");
   const [searchedFriends, setSearchedFriends] = useState([]);
-  const [addFriend, setAddFriend] = useState(null);
-  const [removeFriend, setRemoveFriend] = useState(null);
+
+  const addFriend = (friend) => {
+    axios
+      .put(`/friends`, {
+        username: friend.username,
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          toast.success(response.data.message);
+          setFriends({ ...friends, [friend.username]: friend });
+        }
+      })
+      .catch((error) => {
+        toast.error(error.response.data.message);
+      });
+  };
 
   useEffect(() => {
     if (addFriend) {
-      axios
-        .put(`/friends`, {
-          username: addFriend.username,
-        })
-        .then((response) => {
-          if (response.status === 200) {
-            toast.success(response.data.message);
-            setFriends({ ...friends, [addFriend.username]: addFriend });
-          }
-        })
-        .catch((error) => {
-          toast.error(error.response.data.message);
-        });
     }
   }, [addFriend]);
 
-  useEffect(() => {
-    if (removeFriend) {
-      axios(`/friends/${removeFriend.username}`, {
-        method: "DELETE",
+  const removeFriend = (username) => {
+    axios(`/friends/${username}`, {
+      method: "DELETE",
+    })
+      .then((response) => {
+        if (response.status === 200) {
+          toast.success(response.data.message);
+          setFriends((prev) => {
+            delete prev[username];
+            return prev;
+          });
+        }
       })
-        .then((response) => {
-          console.log(response);
-          if (response.status === 200) {
-            toast.success(response.data.message);
-            setFriends((prev) => {
-              delete prev[removeFriend];
-              return prev;
-            });
-          }
-        })
-        .catch((error) => {
-          toast.error(error.response.data.message);
-        });
-    }
-  }, [removeFriend]);
+      .catch((error) => {
+        toast.error(error.response.data.message);
+      });
+  };
 
   useEffect(() => {
     if (searchedFriendsText.length > 0) {
@@ -105,7 +103,7 @@ const Friends = ({ axios, friends, setFriends }) => {
                             <button
                               className="btn btn-success"
                               onClick={() => {
-                                setAddFriend(friend);
+                                addFriend(friend);
                               }}
                             >
                               Add
@@ -151,7 +149,7 @@ const Friends = ({ axios, friends, setFriends }) => {
                               <button
                                 className="btn btn-danger"
                                 onClick={() => {
-                                  setRemoveFriend(friend);
+                                  removeFriend(friend.username);
                                 }}
                               >
                                 Remove
