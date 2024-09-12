@@ -39,7 +39,7 @@ Chit Chat
     -   Create a `.env.local` file in the `client` directory with the following variable:
 
         ```
-        SERVER_URL=http://127.0.0.1:3000
+        SERVER_URL=http://127.0.0.1:5000
         ```
 
 -   **Run the application:**
