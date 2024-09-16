@@ -8,7 +8,7 @@ const LeftPane = ({ setUser, user, logOut, axios }) => {
   const handleImageClick = () => {
     fileInputRef.current.click();
   };
-
+  
   useEffect(() => {
     if (updatedImage.length > 0) {
       setUser({ ...user, image: updatedImage });
@@ -45,7 +45,7 @@ const LeftPane = ({ setUser, user, logOut, axios }) => {
             className="img-fluid rounded"
             src={
               user && user.image
-                ? `${process.env.SERVER_URL}/${user.image}`
+                ? `${process.env.REACT_APP_SERVER_URL}/${user.image}`
                 : process.env.PUBLIC_URL + "/assets/avatar.png"
             }
           />

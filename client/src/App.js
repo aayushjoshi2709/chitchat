@@ -30,7 +30,7 @@ const App = () => {
     if (socket) socket.disconnect();
   });
 
-  axios.defaults.baseURL = process.env.SERVER_URL;
+  axios.defaults.baseURL = process.env.REACT_APP_SERVER_URL;
   // sign up function
   useEffect(async () => {
     if (JWTToken === "") {
@@ -45,7 +45,7 @@ const App = () => {
       }
     } else if (!socket) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${JWTToken}`;
-      const socket_conn = io(process.env.SERVER_URL, {
+      const socket_conn = io(process.env.REACT_APP_SERVER_URL, {
         query: { token: JWTToken },
       }).connect({
         transports: ["websocket"],
