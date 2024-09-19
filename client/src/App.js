@@ -13,6 +13,7 @@ import About from "./About/About";
 import axios from "axios";
 import io from "socket.io-client";
 import "./App.css";
+import ProtectedRoute from "./Utils/ProtectedRoute/ProtectedRoute";
 const App = () => {
   // states to store data for the user
   const [JWTToken, setJWTToken] = useState("");
@@ -180,39 +181,41 @@ const App = () => {
           path="/login"
           element={<Login setJWTToken={setJWTToken} axios={axios} />}
         />
-        <Route
-          exact
-          path="/messaging"
-          element={
-            <Messaging
-              JWTToken={JWTToken}
-              setJWTToken={setJWTToken}
-              axios={axios}
-              socket={socket}
-              friends={friends}
-              setFriends={setFriends}
-              messages={messages}
-              setMessages={setMessages}
-            />
-          }
-        />
+        <Route element={<ProtectedRoute JWTToken={JWTToken} />}>
+          <Route
+            exact
+            path="/messaging"
+            element={
+              <Messaging
+                JWTToken={JWTToken}
+                setJWTToken={setJWTToken}
+                axios={axios}
+                socket={socket}
+                friends={friends}
+                setFriends={setFriends}
+                messages={messages}
+                setMessages={setMessages}
+              />
+            }
+          />
+          <Route
+            exact
+            path="/about"
+            socket={socket}
+            element={
+              <About
+                friends={friends}
+                setFriends={setFriends}
+                setJWTToken={setJWTToken}
+                axios={axios}
+              />
+            }
+          />
+        </Route>
         <Route
           exact
           path="/register"
           element={<SignUp setJWTToken={setJWTToken} axios={axios} />}
-        />
-        <Route
-          exact
-          path="/about"
-          socket={socket}
-          element={
-            <About
-              friends={friends}
-              setFriends={setFriends}
-              setJWTToken={setJWTToken}
-              axios={axios}
-            />
-          }
         />
       </Routes>
     </Router>
