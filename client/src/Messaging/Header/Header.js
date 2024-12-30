@@ -19,7 +19,7 @@ const Header = (props) => {
             <div className={Styles.details}>
               <p>{props.user.firstName + " " + props.user.lastName}</p>
               <span className={Styles.onlineSpan}>
-                <i class="fa-solid fa-circle"></i>
+                <i className="fa-solid fa-circle"></i>
               </span>
             </div>
           ) : (

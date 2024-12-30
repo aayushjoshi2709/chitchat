@@ -57,7 +57,7 @@ MessagesRouter.post("/", dtoValidator(MessageDto, "body"), async (req, res) => {
         if (friendSocketId) {
           logger.info(
             "Going to emit message to the friend on socket id: " +
-              friendSocketId
+            friendSocketId
           );
           socketInstance.emitEvent(friendSocketId, "new_message", {
             from: req.user.username,
@@ -80,41 +80,100 @@ MessagesRouter.get("/", async (req, res) => {
   logger.info("Getting all messages for user: " + req.user.username);
   limit = req.query.limit || 1000;
   skip = req.query.skip || 0;
-  Message.find({
-    $or: [
-      { "from.username": req.user.username },
-      { "to.username": req.user.username },
-    ],
-  })
-    .select("from to message time status")
-    .sort({ time: 1 })
-    .skip(skip)
-    .limit(limit)
-    .then((messages) => {
-      logger.info("Got the messages of length: " + messages.length);
-      const response = {};
-      const putMessageIntoRespose = (message, recipient) => {
-        const username = message[recipient].username;
-        response[username] = {
-          ...response[username],
-        };
-        response[username]["messages"] = {
-          ...response[username]["messages"],
-          [message._id]: message,
-        };
-        response[username]["lastMessage"] = {
-          message: message.message,
-          time: message.time,
-        };
-      };
-      messages.map((message) => {
-        if (message.from.username == req.user.username) {
-          putMessageIntoRespose(message, "to");
-        } else if (message.to.username == req.user.username) {
-          putMessageIntoRespose(message, "from");
+  User.aggregate([
+    {
+        $match: {
+            username: req.user.username
         }
-      });
-      res.send(JSON.stringify(response));
+    },
+    {
+        $lookup: {
+            from: "users",
+            localField: "friends",
+            foreignField: "_id",
+            as: "friends",
+            pipeline: [
+                { $project: { _id: 0, username: 1 } }
+            ]
+        }
+    },
+    {
+        $addFields: {
+            friendUsernames: {
+                $map: {
+                    input: "$friends",
+                    as: "friend",
+                    in: "$$friend.username"
+                }
+            }
+        }
+    },
+    {
+        $lookup: {
+            from: "messages",
+            let: { friendUsernames: "$friendUsernames", username: "$username" },
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {
+                            $or: [
+                                { $and: [{ $in: ["$to.username", "$$friendUsernames"] }, { $eq: ["$from.username", "$$username"] }] },
+                                { $and: [{ $in: ["$from.username", "$$friendUsernames"] }, { $eq: ["$to.username", "$$username"] }] }
+                            ]
+                        }
+                    }
+                },
+                { $sort: { time: 1 } },
+                { $limit: 100 },
+                {
+                    $addFields: {
+                        groupname: {
+                            $cond: [
+                                { $in: ["$to.username", "$$friendUsernames"] },
+                                "$to.username",
+                                "$from.username"
+                            ]
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$groupname",
+                        messages: { $push: "$$ROOT" }
+                    }
+                }
+            ],
+            as: "chats"
+        }
+    },
+    {
+        $project: {
+            chats: { $arrayToObject: { $map: {
+                input: "$chats",
+                as: "chat",
+                in: [ "$$chat._id", {
+                 messages:{
+                  $arrayToObject:{
+                    $map:{
+                      input:"$$chat.messages",
+                      as: "message",
+                      in:[{$toString: "$$message._id"}, "$$message"]
+                    }
+                  }
+                 } 
+                } ] 
+            }}},
+            _id: 0
+        }
+    }
+]).exec()
+    .then((results) => {
+        const response = results[0].chats;
+        logger.info("Fetched all the results: ", response);
+        res.send(JSON.stringify(response));
+    })
+    .catch(err => {
+      console.error(err);
     });
 });
 
