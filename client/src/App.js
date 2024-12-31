@@ -64,11 +64,9 @@ const App = () => {
         setNewMessageData(messageData);
       });
       socket_conn.on("update_message_status_received_ack", (data) => {
-        console.log("update_message_status_received_ack:", data);
         setStatusReceived(data);
       });
       socket_conn.on("update_message_status_seen_ack", (data) => {
-        console.log("update_message_status_seen_ack:", data);
         setStatusSeen(data);
       });
     }

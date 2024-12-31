@@ -7,7 +7,6 @@ import { redirect } from "react-router-dom";
 function About({ setJWTToken, axios, friends, setFriends }) {
   // logout function
   const logOut = () => {
-    console.log("here");
     localStorage.removeItem("token");
     setJWTToken("");
     redirect("/login");

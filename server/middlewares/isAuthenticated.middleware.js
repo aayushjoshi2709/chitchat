@@ -24,7 +24,7 @@ const isAuthenticated = async (req, res, next) => {
       logger.info("Going to find user in cache: " + decoded.username);
       const user = await userCache.get(decoded.username);
       if (user) {
-        logger.info("User found in cache: " + user);
+        logger.info(`User found in cache for username ${decoded.username}: ` + user);
         req.user = JSON.parse(user);
         next();
       } else {

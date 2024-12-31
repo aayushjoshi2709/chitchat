@@ -20,7 +20,7 @@ const ReceivedMessage = ({ message, getTime, socket, friend }) => {
         <div
           id={message.id}
           className="text-muted text-end"
-          style={{ fontSize: "small" }}
+          style={{ fontSize: "medium" }}
         >
           {getTime(message.time)}
         </div>

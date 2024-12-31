@@ -74,6 +74,7 @@ AuthRouter.post("/login", dtoValidator(LoginDto, "body"), async (req, res) => {
   User.findOne({ username: username })
     .select("-messages")
     .then(async (user) => {
+      logger.info(`User found for username: ${username}` + user)
       if (!user) {
         logger.error("User not found for username: " + username);
         return res

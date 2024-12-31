@@ -6,7 +6,7 @@ const socketEvents = {};
 
 socketEvents.connection = (socket) => {
   socket.on("disconnect", () => {
-    logger.info("User disconnected: " + socket.user.username);
+    logger.info("User disco nnected: " + socket.user.username);
     socketCache.del(socket.user.username);
   });
   socket.on("update_message_status_received", async (data) => {

@@ -93,53 +93,51 @@ MessagesRouter.get("/", async (req, res) => {
             foreignField: "_id",
             as: "friends",
             pipeline: [
-                { $project: { _id: 0, username: 1 } }
+                { $project: { _id: 0, username: 1 } } // Only extract the username field
             ]
-        }
-    },
-    {
-        $addFields: {
-            friendUsernames: {
-                $map: {
-                    input: "$friends",
-                    as: "friend",
-                    in: "$$friend.username"
-                }
-            }
         }
     },
     {
         $lookup: {
             from: "messages",
-            let: { friendUsernames: "$friendUsernames", username: "$username" },
+            let: { friendUsernames: { $map: { input: "$friends", as: "friend", in: "$$friend.username" } }, username: "$username" },
             pipeline: [
                 {
                     $match: {
                         $expr: {
                             $or: [
-                                { $and: [{ $in: ["$to.username", "$$friendUsernames"] }, { $eq: ["$from.username", "$$username"] }] },
-                                { $and: [{ $in: ["$from.username", "$$friendUsernames"] }, { $eq: ["$to.username", "$$username"] }] }
+                                {
+                                    $and: [
+                                        { $in: ["$to.username", "$$friendUsernames"] },
+                                        { $eq: ["$from.username", "$$username"] }
+                                    ]
+                                },
+                                {
+                                    $and: [
+                                        { $in: ["$from.username", "$$friendUsernames"] },
+                                        { $eq: ["$to.username", "$$username"] }
+                                    ]
+                                }
                             ]
                         }
                     }
                 },
-                { $sort: { time: 1 } },
-                { $limit: 100 },
+                { $sort: { time: 1 } }, // Sort messages by time in descending order
                 {
-                    $addFields: {
-                        groupname: {
+                    $group: {
+                        _id: {
                             $cond: [
                                 { $in: ["$to.username", "$$friendUsernames"] },
                                 "$to.username",
                                 "$from.username"
                             ]
+                        },
+                        messages: {
+                            $push: "$$ROOT"
+                        },
+                        lastMessage: {
+                            $last: "$$ROOT"
                         }
-                    }
-                },
-                {
-                    $group: {
-                        _id: "$groupname",
-                        messages: { $push: "$$ROOT" }
                     }
                 }
             ],
@@ -148,21 +146,29 @@ MessagesRouter.get("/", async (req, res) => {
     },
     {
         $project: {
-            chats: { $arrayToObject: { $map: {
-                input: "$chats",
-                as: "chat",
-                in: [ "$$chat._id", {
-                 messages:{
-                  $arrayToObject:{
-                    $map:{
-                      input:"$$chat.messages",
-                      as: "message",
-                      in:[{$toString: "$$message._id"}, "$$message"]
-                    }
-                  }
-                 } 
-                } ] 
-            }}},
+            chats: {
+              $arrayToObject: { 
+                $map: {
+                    input: "$chats",
+                    as: "chat",
+                    in: ["$$chat._id",{
+                      messages:{
+                        $arrayToObject:{
+                          $map:{
+                            input:"$$chat.messages",
+                            as: "message",
+                            in:[{$toString: "$$message._id"}, "$$message"]
+                          }
+                        }
+                      },
+                      lastMessage: {
+                        message:"$$chat.lastMessage.message",
+                        time: "$$chat.lastMessage.time",
+                      }
+                    }]
+                }
+              }
+            },
             _id: 0
         }
     }

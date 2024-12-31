@@ -8,7 +8,7 @@ const ObjectId = require("mongoose").Types.ObjectId;
 // create new friend route
 friendRouter.put("/", async (req, res) => {
   const logger = req.logger;
-  logger.info("Going to create a new friend");
+  logger.info("Going to create a new friend with username: " + req.body.username);
   logger.debug("Request Params: " + req.params);
   const user = req.user;
   const friendUsername = req.body.username;

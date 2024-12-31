@@ -11,12 +11,11 @@ const SendMessage = ({ axios, friend, messages, setMessages }) => {
           message: input.current.value,
         })
         .then((response) => {
-          if (response.status === 200) {
+          if (response.status === 201) {
             const message = response.data.data;
             const updatedMessages = {
               ...messages,
               [friend.username]: {
-                ...messages[friend.username],
                 messages: {
                   ...messages[friend.username]?.messages,
                   [message._id]: message,
