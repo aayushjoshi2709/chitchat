@@ -16,7 +16,7 @@ const RightPane = ({
 }) => {
   return (
     <div className={styles.rightPane}>
-      <Header user={friend} currentUser={false} />
+      <Header user={friend} currentUser={false} axios={axios}/>
       <Messages
         friend={friend}
         socket={socket}

@@ -1,25 +1,44 @@
-import React from "react";
+import React,{useState, useEffect} from "react";
 import Styles from "./header.module.css";
 import { Link } from "react-router-dom";
 
-const Header = (props) => {
-  const data = (props) => {
+const Header = ({axios, user, currentUser}) => {
+  const [isOnline, setIsOnline] = useState(false);
+  useEffect(() => {
+    setInterval(() => {
+      if(axios){
+        axios
+        .get(`/user/${user.username}/checkOnline`)
+        .then((res)=>{
+          if(res.status === 200){
+            if(res.data.status){
+              setIsOnline(true);
+            }else{
+              setIsOnline(false);
+            }
+          }
+        })
+      }
+    }, 15000);
+  }, [user])
+  
+  const data = (user, currentUser) => {
     return (
       <div className={Styles.header}>
         <img
           className={Styles.avatar}
           src={
-            props.user && props.user.image
-              ? `${process.env.REACT_APP_SERVER_URL}/${props.user.image}`
+            user && user.image
+              ? `${process.env.REACT_APP_SERVER_URL}/${user.image}`
               : process.env.PUBLIC_URL + "/assets/avatar.png"
           }
         />
-        {props.currentUser === false ? (
-          props.user ? (
+        {currentUser === false ? (
+          user ? (
             <div className={Styles.details}>
-              <p>{props.user.firstName + " " + props.user.lastName}</p>
+              <p>{user.firstName + " " + user.lastName}</p>
               <span className={Styles.onlineSpan}>
-                <i className="fa-solid fa-circle"></i>
+                {isOnline?<i className="fa-solid fa-circle"></i>:""}
               </span>
             </div>
           ) : (
@@ -33,10 +52,10 @@ const Header = (props) => {
       </div>
     );
   };
-  return props.currentUser ? (
-    <Link to="/about">{data(props)}</Link>
+  return currentUser ? (
+    <Link to="/about">{data(user, currentUser)}</Link>
   ) : (
-    data(props)
+    data(user, currentUser)
   );
 };
 export default Header;

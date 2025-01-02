@@ -3,7 +3,7 @@ const userRouter = require("express").Router();
 const multerUpload = require("../../middlewares/multer.middleware");
 const { StatusCodes } = require("http-status-codes");
 const isAuthenticated = require("../../middlewares/isAuthenticated.middleware");
-const { userCache } = require("../../redis/redis");
+const { userCache, socketCache } = require("../../redis/redis");
 userRouter.get("/", isAuthenticated, async (req, res) => {
   logger = req.logger;
   logger.info("Getting user details");
@@ -13,6 +13,12 @@ userRouter.get("/", isAuthenticated, async (req, res) => {
   logger.info("User details: " + JSON.stringify(user));
   res.send(user);
 });
+
+userRouter.get("/:username/checkOnline", isAuthenticated, async(req, res)=>{
+  const usernameToCheck = req.params.username;
+  const exists = await socketCache.exists(usernameToCheck);
+  res.send({status: exists});
+})
 
 userRouter.get("/about", isAuthenticated, async (req, res) => {
   const logger = req.logger;
