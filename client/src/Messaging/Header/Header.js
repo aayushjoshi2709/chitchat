@@ -6,7 +6,7 @@ const Header = ({axios, user, currentUser}) => {
   const [isOnline, setIsOnline] = useState(false);
   useEffect(() => {
     setInterval(() => {
-      if(axios){
+      if(axios && user){
         axios
         .get(`/user/${user.username}/checkOnline`)
         .then((res)=>{

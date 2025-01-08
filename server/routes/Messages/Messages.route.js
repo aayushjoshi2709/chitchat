@@ -6,8 +6,8 @@ const MessageDto = require("../../dtos/Message.dto");
 const dtoValidator = require("../../middlewares/dtoValidator.middleware");
 const { userCache, socketCache } = require("../../redis/redis");
 const { socketInstance } = require("../../sockets/socket");
-// get all messages route
 
+// post messages route
 MessagesRouter.post("/", dtoValidator(MessageDto, "body"), async (req, res) => {
   const logger = req.logger;
   logger.info("Received new message: ", req.body);
@@ -75,6 +75,8 @@ MessagesRouter.post("/", dtoValidator(MessageDto, "body"), async (req, res) => {
     });
 });
 
+
+//get top 100 messages for all friends of a user
 MessagesRouter.get("/", async (req, res) => {
   const logger = req.logger;
   logger.info("Getting all messages for user: " + req.user.username);
@@ -93,7 +95,7 @@ MessagesRouter.get("/", async (req, res) => {
             foreignField: "_id",
             as: "friends",
             pipeline: [
-                { $project: { _id: 0, username: 1 } } // Only extract the username field
+                { $project: { _id: 0, username: 1 } } 
             ]
         }
     },
@@ -122,7 +124,8 @@ MessagesRouter.get("/", async (req, res) => {
                         }
                     }
                 },
-                { $sort: { time: 1 } }, // Sort messages by time in descending order
+                { $sort: { time: 1 } }, 
+                { $limit: 10},
                 {
                     $group: {
                         _id: {
@@ -183,35 +186,55 @@ MessagesRouter.get("/", async (req, res) => {
     });
 });
 
-// get messages with a ddparticular user
+// get messages with a particular user
 MessagesRouter.get("/:username", async (req, res) => {
   logger = req.logger;
   limit = req.query.limit || 100;
   skip = req.query.skip || 0;
-  logger.info("Getting messages with user: " + req.params.username);
-  User.findOne({ username: req.params.username }).then((user) => {
+  logger.info(`Getting messages with user: ${req.params.username} with limit: ${limit} and count: ${count}`);
+  User.findOne({ username: req.params.username }).then(async (user) => {
     if (!user) {
       logger.error("Error in finding friend: " + error);
       res
         .send(JSON.stringify({ message: "Error finding friend" }))
         .status(StatusCodes.INTERNAL_SERVER_ERROR);
     } else {
-      Message.find({
+      const count = await Message.count({
         $or: [
           { "from.username": req.user.username, "to.username": user.username },
           { "from.username": user.username, "to.username": req.user.username },
         ],
-      })
-        .skip(skip)
-        .limit(limit)
-        .select("from to message time status")
-        .sort({ time: 1 })
-        .then((messages) => {
-          logger.info("Got the user messages: " + messages);
-          const response = {};
-          response[user.username] = messages;
-          res.send(JSON.stringify(response));
-        });
+      });
+
+      const response = {
+        count: count,
+        limit: limit,
+        skip: skip,
+        data: {}
+      }
+
+      if(count >= limit + skip){
+        Message.find({
+          $or: [
+            { "from.username": req.user.username, "to.username": user.username },
+            { "from.username": user.username, "to.username": req.user.username },
+          ],
+        })
+          .skip(skip)
+          .limit(limit)
+          .select("from to message time status")
+          .sort({ time: 1 })
+          .then((messages) => {
+            logger.info("Got the user messages: " + messages);
+            const response = {};
+            response.date = {
+              [user.username]:messages
+            };
+            res.send(JSON.stringify(response));
+          });
+      }else{
+        res.send(JSON.stringify(response));
+      }
     }
   });
 });
