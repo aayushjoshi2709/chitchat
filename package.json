@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jaayush27/chitchat.git"
+    "url": "git+https://github.com/aayushjoshi2709/chitchat.git"
   },
   "author": "Aayush Joshi",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jaayush27/chitchat/issues"
+    "url": "https://github.com/aayushjoshi2709/chitchat/issues"
   },
-  "homepage": "https://github.com/jaayush27/chitchat#readme",
+  "homepage": "https://github.com/aayushjoshi2709/chitchat#readme",
   "dependencies": {
     "concurrently": "^7.0.0"
   }
