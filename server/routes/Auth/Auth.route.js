@@ -1,6 +1,6 @@
 const User = require("../../models/User/User.model");
 const AuthRouter = require("express").Router();
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { StatusCodes } = require("http-status-codes");
 const UserDto = require("../../dtos/User.dto");
 const LoginDto = require("../../dtos/Login.dto");
@@ -74,7 +74,7 @@ AuthRouter.post("/login", dtoValidator(LoginDto, "body"), async (req, res) => {
   User.findOne({ username: username })
     .select("-messages")
     .then(async (user) => {
-      logger.info(`User found for username: ${username}` + user)
+      logger.info(`User found for username: ${username}` + user);
       if (!user) {
         logger.error("User not found for username: " + username);
         return res
