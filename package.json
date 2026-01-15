@@ -7,7 +7,7 @@
     "client": "cd client && pnpm start",
     "server": "cd server && pnpm start",
     "start": "cd client && pnpm i && pnpm build && cd .. && cd server && pnpm i && pnpm start",
-    "dev":"concurrently \"pnpm server\" \"pnpm client\"",
+    "dev": "concurrently \"pnpm server\" \"pnpm client\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,6 +21,6 @@
   },
   "homepage": "https://github.com/aayushjoshi2709/chitchat#readme",
   "dependencies": {
-    "concurrently": "^7.0.0"
+    "concurrently": "^9.2.1"
   }
 }
