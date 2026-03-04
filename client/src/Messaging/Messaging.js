@@ -51,7 +51,7 @@ const Messaging = ({
   }
   // get messages function
   const getMessages = async () => {
-    axios.get(/messages").then((response) => {
+    axios.get("/messages").then((response) => {
       if (response.status === 200) {
         setMessages(checkReceived(response.data));
       }
