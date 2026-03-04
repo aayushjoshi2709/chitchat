@@ -5,12 +5,14 @@ require("dotenv").config();
 const userCache = redis.createClient({
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
+  password: process.env.REDIS_PASSWORD,
   db: 0,
 });
 
 const socketCache = redis.createClient({
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
+  password: process.env.REDIS_PASSWORD,
   db: 1,
 });
 
