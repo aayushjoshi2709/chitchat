@@ -14,7 +14,7 @@ function About({ setJWTToken, axios, friends, setFriends }) {
   const [user, setUser] = useState({});
   useEffect(async () => {
     axios
-      .get("/user/about")
+      .get("/api/user/about")
       .then((res) => {
         if (res.status === 200) {
           setUser(res.data);

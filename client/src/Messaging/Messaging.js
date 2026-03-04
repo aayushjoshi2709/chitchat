@@ -51,7 +51,7 @@ const Messaging = ({
   }
   // get messages function
   const getMessages = async () => {
-    axios.get("/messages").then((response) => {
+    axios.get("/api/messages").then((response) => {
       if (response.status === 200) {
         setMessages(checkReceived(response.data));
       }
@@ -59,7 +59,7 @@ const Messaging = ({
   };
   // const get friends
   const getFriends = async () => {
-    axios.get(`/friends`).then((response) => {
+    axios.get(`/api/friends`).then((response) => {
       if (response.status === 200) {
         const friendMap = {};
         response.data.forEach((friend) => {
@@ -74,7 +74,7 @@ const Messaging = ({
   // get user function
   const getUser = async () => {
     axios
-      .get(`/user`)
+      .get(`/api/user`)
       .then((response) => {
         if (response.status === 200) {
           setUser(response.data);

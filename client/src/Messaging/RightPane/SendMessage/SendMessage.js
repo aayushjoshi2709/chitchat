@@ -6,7 +6,7 @@ const SendMessage = ({ axios, friend, messages, setMessages }) => {
   const send = () => {
     if (input.current.value !== "") {
       axios
-        .post("/messages", {
+        .post("/api/messages", {
           to: friend.username,
           message: input.current.value,
         })

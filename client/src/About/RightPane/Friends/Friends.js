@@ -6,7 +6,7 @@ const Friends = ({ axios, friends, setFriends }) => {
 
   const addFriend = (friend) => {
     axios
-      .put(`/friends`, {
+      .put(`/api/friends`, {
         username: friend.username,
       })
       .then((response) => {
@@ -26,7 +26,7 @@ const Friends = ({ axios, friends, setFriends }) => {
   }, [addFriend]);
 
   const removeFriend = (username) => {
-    axios(`/friends/${username}`, {
+    axios(`/api/friends/${username}`, {
       method: "DELETE",
     })
       .then((response) => {
@@ -45,7 +45,7 @@ const Friends = ({ axios, friends, setFriends }) => {
 
   useEffect(() => {
     if (searchedFriendsText.length > 0) {
-      axios.get(`/friends/search/${searchedFriendsText}`).then((response) => {
+      axios.get(`/api/friends/search/${searchedFriendsText}`).then((response) => {
         if (response.status === 200) {
           setSearchedFriends(response.data);
         }

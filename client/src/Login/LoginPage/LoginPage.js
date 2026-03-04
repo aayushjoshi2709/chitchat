@@ -12,7 +12,7 @@ function LoginPage({ setJWTToken }) {
     let uname = event.target[0].value;
     let pass = event.target[1].value;
     axios
-      .post("/auth/login", {
+      .post("/api/auth/login", {
         username: uname,
         password: pass,
       })

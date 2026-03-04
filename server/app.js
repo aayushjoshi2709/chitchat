@@ -53,7 +53,7 @@ app.use((req, res, next) => {
   req.logger = logger;
   next();
 });
-app.use("/user", userRouter);
-app.use("/auth", authRouter);
-app.use("/messages", isAuthenticated, MessagesRouter);
-app.use("/friends", isAuthenticated, FriendRouter);
+app.use("/api/user", userRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/messages", isAuthenticated, MessagesRouter);
+app.use("/api/friends", isAuthenticated, FriendRouter);
