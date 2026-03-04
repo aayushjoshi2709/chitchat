@@ -12,7 +12,7 @@ const SignUpPage = ({ setJWTToken }) => {
     const username = event.target[3].value;
     const pass = event.target[4].value;
     axios
-      .post("/api/auth/register", {
+      .post(/auth/register", {
         firstName: fname,
         lastName: lname,
         email: email,

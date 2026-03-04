@@ -22,7 +22,7 @@ const LeftPane = ({ setUser, user, logOut, axios }) => {
       const formData = new FormData();
       formData.append("image", file);
       axios
-        .post("/api/user/image", formData)
+        .post(/user/image", formData)
         .then((res) => {
           if (res.status === 200) {
             toast.success(res.data.message);
